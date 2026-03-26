@@ -278,31 +278,24 @@ function JoinForm({
 // ── Lineup Tab ────────────────────────────────────────────────────────────────
 
 function LineupTab({
-  groupId,
   memberId,
   members,
   picks,
+  onToggle,
 }: {
-  groupId: string;
   memberId: string;
   members: Member[];
   picks: ArtistPick[];
+  onToggle: (artistId: string) => void;
 }) {
   const [activeDay, setActiveDay] = useState<Day>("fri");
   const [search, setSearch] = useState("");
-  const [optimistic, setOptimistic] = useState<Map<string, boolean>>(new Map());
 
   const memberMap = Object.fromEntries(members.map((m) => [m.id, m]));
 
-  const serverPicks = new Set(
+  const myPicks = new Set(
     picks.filter((p) => p.member_id === memberId).map((p) => p.artist_id)
   );
-  // Apply optimistic overrides on top of server state
-  const myPicks = new Set(serverPicks);
-  for (const [artistId, val] of optimistic) {
-    if (val) myPicks.add(artistId);
-    else myPicks.delete(artistId);
-  }
 
   const dayArtists = ARTISTS.filter((a) => a.day === activeDay);
   const filtered = search.trim()
@@ -314,20 +307,6 @@ function LineupTab({
       .filter((p) => p.artist_id === artistId)
       .map((p) => memberMap[p.member_id])
       .filter(Boolean) as Member[];
-  }
-
-  async function handleToggle(artistId: string) {
-    const currentlyPicked = myPicks.has(artistId);
-    // Instant visual feedback
-    setOptimistic((prev) => new Map(prev).set(artistId, !currentlyPicked));
-    try {
-      await togglePick(groupId, memberId, artistId, currentlyPicked);
-    } catch {
-      // Revert on failure
-      setOptimistic((prev) => new Map(prev).set(artistId, currentlyPicked));
-    }
-    // Clear override — server state (via real-time) now owns it
-    setOptimistic((prev) => { const m = new Map(prev); m.delete(artistId); return m; });
   }
 
   const days: Day[] = ["fri", "sat", "sun"];
@@ -419,7 +398,7 @@ function LineupTab({
                 )}
               </div>
               <button
-                onClick={() => handleToggle(artist.id)}
+                onClick={() => onToggle(artist.id)}
                 style={{
                   width: 40,
                   height: 40,
@@ -959,6 +938,33 @@ export default function GroupApp({ groupId }: { groupId: string }) {
   const currentMember = members.find((m) => m.id === memberId);
   const myPickCount = picks.filter((p) => p.member_id === memberId).length;
 
+  async function handleToggle(artistId: string) {
+    const pickId = `${memberId}_${artistId}`;
+    const isCurrentlyPicked = picks.some(
+      (p) => p.member_id === memberId && p.artist_id === artistId
+    );
+    // Optimistically update local state immediately
+    if (isCurrentlyPicked) {
+      setPicks((prev) => prev.filter((p) => p.id !== pickId));
+    } else {
+      setPicks((prev) => [
+        ...prev,
+        { id: pickId, group_id: groupId, member_id: memberId!, artist_id: artistId, created_at: new Date().toISOString() },
+      ]);
+    }
+    // Sync to server (real-time will reconcile other members' views)
+    try {
+      await togglePick(groupId, memberId!, artistId, isCurrentlyPicked);
+    } catch {
+      // Revert on server error
+      setPicks((prev) =>
+        isCurrentlyPicked
+          ? [...prev, { id: pickId, group_id: groupId, member_id: memberId!, artist_id: artistId, created_at: new Date().toISOString() }]
+          : prev.filter((p) => p.id !== pickId)
+      );
+    }
+  }
+
   return (
     <div style={{ height: "100dvh", display: "flex", flexDirection: "column", background: "#0a0a0f", overflow: "hidden" }}>
       {copied && (
@@ -991,10 +997,10 @@ export default function GroupApp({ groupId }: { groupId: string }) {
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         {activeTab === "lineup" && (
           <LineupTab
-            groupId={groupId}
             memberId={memberId}
             members={members}
             picks={picks}
+            onToggle={handleToggle}
           />
         )}
         {activeTab === "picks" && (
