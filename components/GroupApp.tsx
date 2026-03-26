@@ -2,6 +2,11 @@
 
 import { useEffect, useState, useCallback } from "react";
 import {
+  CactusIcon, CameraIcon, HeartIcon, HeartEmptyLarge,
+  CrewIcon, MusicIconLarge, HeartNavIcon, CrewNavIcon,
+  LightningIcon, CloseIcon,
+} from "./Icons";
+import {
   getGroup,
   addMember,
   subscribeMembers,
@@ -161,7 +166,7 @@ function JoinForm({
     >
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: 40 }}>
-        <div style={{ fontSize: 40, marginBottom: 8 }}>🌵</div>
+        <div style={{ marginBottom: 8 }}><CactusIcon size={48} /></div>
         <div className="gradient-text" style={{ fontSize: 28, fontWeight: 800, letterSpacing: -1 }}>
           Festivibe
         </div>
@@ -209,10 +214,9 @@ function JoinForm({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 32,
                 }}
               >
-                📸
+                <CameraIcon size={40} />
               </div>
               <div style={{ fontSize: 16, fontWeight: 600 }}>Add your photo</div>
               <div style={{ fontSize: 13, color: "rgba(240,240,245,0.45)" }}>
@@ -416,7 +420,7 @@ function LineupTab({
                   transition: "all 0.15s",
                 }}
               >
-                {isPicked ? "♥" : "♡"}
+                <HeartIcon size={20} filled={isPicked} />
               </button>
             </div>
           );
@@ -469,7 +473,7 @@ function PicksTab({
           gap: 12,
         }}
       >
-        <div style={{ fontSize: 48 }}>♡</div>
+        <HeartEmptyLarge size={56} />
         <div style={{ fontSize: 16, fontWeight: 600 }}>No picks yet</div>
         <div style={{ fontSize: 14 }}>Tap the heart on artists in the Lineup tab</div>
       </div>
@@ -532,7 +536,7 @@ function PicksTab({
                       cursor: "pointer",
                     }}
                   >
-                    ×
+                    <CloseIcon size={18} />
                   </button>
                 </div>
               );
@@ -597,7 +601,7 @@ function CrewTab({
           gap: 12,
         }}
       >
-        <div style={{ fontSize: 48 }}>👥</div>
+        <CrewIcon size={56} />
         <div style={{ fontSize: 16, fontWeight: 600 }}>No matches yet</div>
         <div style={{ fontSize: 14, color: "rgba(240,240,245,0.45)" }}>
           Overlaps appear when 2+ crew members pick the same artist
@@ -717,10 +721,10 @@ function BottomNav({
   onChange: (t: Tab) => void;
   myPickCount: number;
 }) {
-  const tabs: { id: Tab; label: string; icon: string }[] = [
-    { id: "lineup", label: "Lineup", icon: "🎵" },
-    { id: "picks", label: "My Picks", icon: "♥" },
-    { id: "crew", label: "Crew", icon: "👥" },
+  const tabs: { id: Tab; label: string }[] = [
+    { id: "lineup", label: "Lineup" },
+    { id: "picks", label: "My Picks" },
+    { id: "crew", label: "Crew" },
   ];
 
   return (
@@ -756,7 +760,9 @@ function BottomNav({
           }}
         >
           <div style={{ position: "relative" }}>
-            <span style={{ fontSize: 20 }}>{t.icon}</span>
+            {t.id === "lineup" && <MusicIconLarge size={22} active={active === "lineup"} />}
+            {t.id === "picks" && <HeartNavIcon size={22} active={active === "picks"} />}
+            {t.id === "crew" && <CrewNavIcon size={22} active={active === "crew"} />}
             {t.id === "picks" && myPickCount > 0 && (
               <div
                 style={{
@@ -919,7 +925,7 @@ export default function GroupApp({ groupId }: { groupId: string }) {
   if (notFound) {
     return (
       <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0a0a0f", gap: 12, padding: 24 }}>
-        <div style={{ fontSize: 48 }}>🌵</div>
+        <CactusIcon size={56} />
         <div style={{ fontSize: 18, fontWeight: 700 }}>Group not found</div>
         <div style={{ fontSize: 14, color: "rgba(240,240,245,0.45)", textAlign: "center" }}>
           This invite link may be invalid or expired.

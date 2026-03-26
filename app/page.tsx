@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createGroup, addMember, randomColor, compressImage } from "@/lib/db";
+import { CactusIcon, CameraIcon, LightningIcon } from "@/components/Icons";
 
 type Step = "home" | "group-name" | "your-info";
 
@@ -84,7 +85,7 @@ export default function Home() {
 
       {/* Logo */}
       <div style={{ textAlign: "center", marginBottom: 48, zIndex: 1 }}>
-        <div style={{ fontSize: 56, marginBottom: 8, lineHeight: 1 }}>🌵</div>
+        <div style={{ marginBottom: 8 }}><CactusIcon size={64} /></div>
         <div
           className="gradient-text"
           style={{ fontSize: 42, fontWeight: 900, letterSpacing: -2, lineHeight: 1 }}
@@ -109,7 +110,7 @@ export default function Home() {
             fontWeight: 600,
           }}
         >
-          <span>⚡</span> Week 2 · Apr 17–19
+          <LightningIcon size={13} /> Week 2 · Apr 17–19
         </div>
       </div>
 
@@ -241,7 +242,7 @@ export default function Home() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
-                  <span style={{ fontSize: 22 }}>📸</span>
+                  <CameraIcon size={28} />
                 )}
               </div>
               <div>
