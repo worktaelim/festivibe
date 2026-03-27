@@ -1141,19 +1141,20 @@ export default function GroupApp({ groupId }: { groupId: string }) {
     });
   }, [groupId]);
 
-  // Check localStorage for membership
+  // Check localStorage for membership (keyed by stable UUID, loaded after group)
   useEffect(() => {
-    const stored = localStorage.getItem(`festivibe_member_${groupId}`);
+    if (!group) return;
+    const stored = localStorage.getItem(`festivibe_member_${group.id}`);
     if (stored) setMemberId(stored);
-  }, [groupId]);
+  }, [group]);
 
   // Subscribe to members + picks once group is confirmed
   useEffect(() => {
     if (!group) return;
-    const unsub1 = subscribeMembers(groupId, setMembers);
-    const unsub2 = subscribePicks(groupId, setPicks);
+    const unsub1 = subscribeMembers(group.id, setMembers);
+    const unsub2 = subscribePicks(group.id, setPicks);
     return () => { unsub1(); unsub2(); };
-  }, [group, groupId]);
+  }, [group]);
 
   const handleJoin = useCallback((id: string) => {
     setMemberId(id);
@@ -1192,15 +1193,11 @@ export default function GroupApp({ groupId }: { groupId: string }) {
   function handleShareInvite() {
     const url = window.location.href;
     const myName = currentMember?.name ?? "Someone";
-    const text = `${myName} invites you to ${group!.name}! Come pick your artists and plan Coachella 2026 Week 2 together 🎪`;
-    if (typeof navigator.share === "function") {
-      navigator.share({ title: group!.name, text, url }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      });
-    }
+    const text = `${myName} invites you to ${group!.name}! Come pick your artists and plan Coachella 2026 Week 2 together 🎪\n${url}`;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
   }
 
   async function handleSaveProfile(updates: { name: string; photo_url: string }) {
@@ -1219,17 +1216,17 @@ export default function GroupApp({ groupId }: { groupId: string }) {
     } else {
       setPicks((prev) => [
         ...prev,
-        { id: pickId, group_id: groupId, member_id: memberId!, artist_id: artistId, created_at: new Date().toISOString() },
+        { id: pickId, group_id: group!.id, member_id: memberId!, artist_id: artistId, created_at: new Date().toISOString() },
       ]);
     }
     // Sync to server (real-time will reconcile other members' views)
     try {
-      await togglePick(groupId, memberId!, artistId, isCurrentlyPicked);
+      await togglePick(group!.id, memberId!, artistId, isCurrentlyPicked);
     } catch {
       // Revert on server error
       setPicks((prev) =>
         isCurrentlyPicked
-          ? [...prev, { id: pickId, group_id: groupId, member_id: memberId!, artist_id: artistId, created_at: new Date().toISOString() }]
+          ? [...prev, { id: pickId, group_id: group!.id, member_id: memberId!, artist_id: artistId, created_at: new Date().toISOString() }]
           : prev.filter((p) => p.id !== pickId)
       );
     }
@@ -1238,8 +1235,8 @@ export default function GroupApp({ groupId }: { groupId: string }) {
   async function handleRefresh() {
     setRefreshing(true);
     await Promise.all([
-      supabase.from("members").select("*").eq("group_id", groupId).then(({ data }) => { if (data) setMembers(data as Member[]); }),
-      supabase.from("picks").select("*").eq("group_id", groupId).then(({ data }) => { if (data) setPicks(data as ArtistPick[]); }),
+      supabase.from("members").select("*").eq("group_id", group!.id).then(({ data }) => { if (data) setMembers(data as Member[]); }),
+      supabase.from("picks").select("*").eq("group_id", group!.id).then(({ data }) => { if (data) setPicks(data as ArtistPick[]); }),
     ]);
     setTimeout(() => setRefreshing(false), 400);
   }
@@ -1305,7 +1302,7 @@ export default function GroupApp({ groupId }: { groupId: string }) {
         )}
         {activeTab === "picks" && (
           <PicksTab
-            groupId={groupId}
+            groupId={group.id}
             memberId={memberId}
             members={members}
             picks={picks}

@@ -2,10 +2,18 @@ import { supabase } from "./supabase";
 
 export interface Group {
   id: string;
+  code: string;
   name: string;
   cover_url: string;
   website_url: string;
   created_at: string;
+}
+
+function generateCode(len = 6): string {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  return Array.from(crypto.getRandomValues(new Uint8Array(len)))
+    .map((b) => chars[b % chars.length])
+    .join("");
 }
 
 export interface Member {
@@ -42,20 +50,22 @@ export async function createGroup(
   cover_url = "",
   website_url = ""
 ): Promise<string> {
+  const code = generateCode();
   const { data, error } = await supabase
     .from("groups")
-    .insert({ name, cover_url, website_url })
-    .select("id")
+    .insert({ name, cover_url, website_url, code })
+    .select("code")
     .single();
   if (error) throw error;
-  return data.id;
+  return data.code;
 }
 
-export async function getGroup(id: string): Promise<Group | null> {
+export async function getGroup(idOrCode: string): Promise<Group | null> {
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-/.test(idOrCode);
   const { data } = await supabase
     .from("groups")
     .select("*")
-    .eq("id", id)
+    .eq(isUuid ? "id" : "code", idOrCode)
     .single();
   return data ?? null;
 }
