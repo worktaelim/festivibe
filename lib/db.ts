@@ -3,6 +3,8 @@ import { supabase } from "./supabase";
 export interface Group {
   id: string;
   name: string;
+  cover_url: string;
+  website_url: string;
   created_at: string;
 }
 
@@ -35,10 +37,14 @@ export function randomColor(): string {
 
 // ── Groups ────────────────────────────────────────────────────────────────────
 
-export async function createGroup(name: string): Promise<string> {
+export async function createGroup(
+  name: string,
+  cover_url = "",
+  website_url = ""
+): Promise<string> {
   const { data, error } = await supabase
     .from("groups")
-    .insert({ name })
+    .insert({ name, cover_url, website_url })
     .select("id")
     .single();
   if (error) throw error;
@@ -151,22 +157,30 @@ export async function togglePick(
 
 // ── Image ─────────────────────────────────────────────────────────────────────
 
-export function compressImage(file: File): Promise<string> {
+export function compressImage(file: File, maxSize = 128): Promise<string> {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new window.Image();
       img.onload = () => {
         const canvas = document.createElement("canvas");
-        const size = 128;
-        canvas.width = size;
-        canvas.height = size;
-        const ctx = canvas.getContext("2d")!;
-        const min = Math.min(img.width, img.height);
-        const sx = (img.width - min) / 2;
-        const sy = (img.height - min) / 2;
-        ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
-        resolve(canvas.toDataURL("image/jpeg", 0.7));
+        if (maxSize === 128) {
+          // Square crop for avatars
+          canvas.width = 128;
+          canvas.height = 128;
+          const ctx = canvas.getContext("2d")!;
+          const min = Math.min(img.width, img.height);
+          const sx = (img.width - min) / 2;
+          const sy = (img.height - min) / 2;
+          ctx.drawImage(img, sx, sy, min, min, 0, 0, 128, 128);
+        } else {
+          // Proportional resize for cover photos
+          const ratio = Math.min(maxSize / img.width, (maxSize * 0.6) / img.height);
+          canvas.width = Math.round(img.width * ratio);
+          canvas.height = Math.round(img.height * ratio);
+          canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        }
+        resolve(canvas.toDataURL("image/jpeg", 0.8));
       };
       img.src = e.target!.result as string;
     };

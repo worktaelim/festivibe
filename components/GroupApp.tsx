@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   CactusIcon, CameraIcon, HeartIcon, HeartEmptyLarge,
   CrewIcon, MusicIconLarge, HeartNavIcon, CrewNavIcon,
@@ -18,7 +18,8 @@ import {
   type Member,
   type ArtistPick,
 } from "@/lib/db";
-import { ARTISTS, DAY_LABELS, type Day } from "@/lib/artists";
+import { ARTISTS, DAY_LABELS, type Day, type Artist } from "@/lib/artists";
+import { supabase } from "@/lib/supabase";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -286,11 +287,13 @@ function LineupTab({
   members,
   picks,
   onToggle,
+  onArtistTap,
 }: {
   memberId: string;
   members: Member[];
   picks: ArtistPick[];
   onToggle: (artistId: string) => void;
+  onArtistTap: (artist: Artist) => void;
 }) {
   const [activeDay, setActiveDay] = useState<Day>("fri");
   const [search, setSearch] = useState("");
@@ -387,7 +390,10 @@ function LineupTab({
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4, lineHeight: 1.2 }}>
+                <div
+                  onClick={() => onArtistTap(artist)}
+                  style={{ fontSize: 15, fontWeight: 600, marginBottom: 4, lineHeight: 1.2, cursor: "pointer" }}
+                >
                   {artist.name}
                 </div>
                 {interested.length > 0 && (
@@ -827,45 +833,148 @@ function Header({
   onShareInvite: () => void;
 }) {
   return (
-    <div
-      style={{
-        padding: "16px 16px 12px",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        background: "#0a0a0f",
-      }}
-    >
-      <div>
-        <div className="gradient-text" style={{ fontSize: 18, fontWeight: 800, letterSpacing: -0.5 }}>
-          Festivibe
+    <div style={{ position: "relative", flexShrink: 0 }}>
+      {/* Cover photo hero */}
+      {group.cover_url ? (
+        <div style={{ position: "relative", height: 160, overflow: "hidden" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={group.cover_url} alt="cover" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,10,15,1) 0%, rgba(10,10,15,0.3) 60%, transparent 100%)" }} />
+          {/* Overlay row */}
+          <div style={{ position: "absolute", bottom: 12, left: 16, right: 16, display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: -0.5 }}>{group.name}</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>
+                {members.length} crew
+                {group.website_url && (
+                  <a href={group.website_url} target="_blank" rel="noopener noreferrer"
+                    style={{ color: "#4cc9f0", marginLeft: 8, textDecoration: "none", fontWeight: 600 }}>
+                    Official site ↗
+                  </a>
+                )}
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <button onClick={onShareInvite} style={inviteBtn}>+ Invite</button>
+              {currentMember && <Avatar member={currentMember} size={34} />}
+            </div>
+          </div>
         </div>
-        <div style={{ fontSize: 13, color: "rgba(240,240,245,0.45)", marginTop: 1 }}>
-          {group.name} · {members.length} crew
+      ) : (
+        /* No cover — compact bar */
+        <div style={{ padding: "14px 16px 12px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#0a0a0f" }}>
+          <div>
+            <div className="gradient-text" style={{ fontSize: 18, fontWeight: 800, letterSpacing: -0.5 }}>
+              {group.name}
+            </div>
+            <div style={{ fontSize: 12, color: "rgba(240,240,245,0.4)", marginTop: 1 }}>
+              {members.length} crew
+              {group.website_url && (
+                <a href={group.website_url} target="_blank" rel="noopener noreferrer"
+                  style={{ color: "#4cc9f0", marginLeft: 8, textDecoration: "none", fontWeight: 600 }}>
+                  Official site ↗
+                </a>
+              )}
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button onClick={onShareInvite} style={inviteBtn}>+ Invite</button>
+            {currentMember && <Avatar member={currentMember} size={34} />}
+          </div>
         </div>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <button
-          onClick={onShareInvite}
-          style={{
-            background: "rgba(247,37,133,0.15)",
-            border: "1px solid rgba(247,37,133,0.3)",
-            borderRadius: 999,
-            color: "#f72585",
-            fontSize: 12,
-            fontWeight: 700,
-            padding: "6px 12px",
-            cursor: "pointer",
-          }}
-        >
-          + Invite
-        </button>
-        {currentMember && <Avatar member={currentMember} size={34} />}
-      </div>
+      )}
     </div>
   );
 }
+
+// ── Artist link sheet ─────────────────────────────────────────────────────────
+
+function ArtistSheet({ artist, onClose }: { artist: import("@/lib/artists").Artist; onClose: () => void }) {
+  const q = encodeURIComponent(artist.name);
+  const handle = artist.name.toLowerCase().replace(/\s+&\s+/g, "").replace(/[^a-z0-9]/g, "");
+
+  const links = [
+    {
+      label: "Open on Spotify",
+      url: `https://open.spotify.com/search/${q}`,
+      bg: "rgba(30,215,96,0.12)",
+      color: "#1ed760",
+      icon: "🎧",
+    },
+    {
+      label: "Search on YouTube",
+      url: `https://www.youtube.com/results?search_query=${q}`,
+      bg: "rgba(255,0,0,0.1)",
+      color: "#ff4444",
+      icon: "▶",
+    },
+    {
+      label: "Find on Instagram",
+      url: `https://www.instagram.com/${handle}/`,
+      bg: "rgba(247,37,133,0.1)",
+      color: "#f72585",
+      icon: "◎",
+    },
+  ];
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 300 }} />
+      <div style={{
+        position: "fixed", bottom: 0, left: 0, right: 0,
+        background: "#13131a",
+        borderRadius: "24px 24px 0 0",
+        padding: "8px 20px max(28px, env(safe-area-inset-bottom))",
+        zIndex: 301,
+        boxShadow: "0 -8px 40px rgba(0,0,0,0.5)",
+      }}>
+        {/* Drag handle */}
+        <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.15)", borderRadius: 2, margin: "8px auto 20px" }} />
+
+        <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>{artist.name}</div>
+        <div style={{
+          display: "inline-block", fontSize: 11, fontWeight: 600,
+          padding: "3px 10px", borderRadius: 999, marginBottom: 20,
+          background: dayBgColor(artist.day), color: dayColor(artist.day),
+          textTransform: "uppercase", letterSpacing: 0.5,
+        }}>
+          {DAY_LABELS[artist.day]}
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {links.map((l) => (
+            <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer"
+              style={{
+                display: "flex", alignItems: "center", gap: 12,
+                background: l.bg, border: `1px solid ${l.color}33`,
+                borderRadius: 14, padding: "14px 16px",
+                textDecoration: "none", color: l.color,
+                fontSize: 15, fontWeight: 600,
+              }}>
+              <span style={{ fontSize: 20 }}>{l.icon}</span>
+              {l.label}
+              <span style={{ marginLeft: "auto", opacity: 0.5, fontSize: 16 }}>↗</span>
+            </a>
+          ))}
+        </div>
+        <button onClick={onClose} style={{ width: "100%", marginTop: 14, background: "rgba(255,255,255,0.06)", border: "none", borderRadius: 14, color: "rgba(240,240,245,0.5)", fontSize: 15, fontWeight: 600, padding: "13px", cursor: "pointer" }}>
+          Close
+        </button>
+      </div>
+    </>
+  );
+}
+
+const inviteBtn: React.CSSProperties = {
+  background: "rgba(247,37,133,0.15)",
+  border: "1px solid rgba(247,37,133,0.3)",
+  borderRadius: 999,
+  color: "#f72585",
+  fontSize: 12,
+  fontWeight: 700,
+  padding: "6px 12px",
+  cursor: "pointer",
+};
 
 // ── Main GroupApp ─────────────────────────────────────────────────────────────
 
@@ -878,6 +987,9 @@ export default function GroupApp({ groupId }: { groupId: string }) {
   const [copied, setCopied] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [selectedArtist, setSelectedArtist] = useState<import("@/lib/artists").Artist | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const touchStartY = useRef(0);
 
   // Load group
   useEffect(() => {
@@ -971,26 +1083,45 @@ export default function GroupApp({ groupId }: { groupId: string }) {
     }
   }
 
+  async function handleRefresh() {
+    setRefreshing(true);
+    await Promise.all([
+      supabase.from("members").select("*").eq("group_id", groupId).then(({ data }) => { if (data) setMembers(data as Member[]); }),
+      supabase.from("picks").select("*").eq("group_id", groupId).then(({ data }) => { if (data) setPicks(data as ArtistPick[]); }),
+    ]);
+    setTimeout(() => setRefreshing(false), 400);
+  }
+
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartY.current = e.touches[0].clientY;
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    const diff = e.changedTouches[0].clientY - touchStartY.current;
+    if (diff > 70) handleRefresh();
+  }
+
   return (
-    <div style={{ height: "100dvh", display: "flex", flexDirection: "column", background: "#0a0a0f", overflow: "hidden" }}>
+    <div
+      style={{ height: "100dvh", display: "flex", flexDirection: "column", background: "#0a0a0f", overflow: "hidden" }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Toasts */}
       {copied && (
-        <div
-          style={{
-            position: "fixed",
-            top: 20,
-            left: "50%",
-            transform: "translateX(-50%)",
-            background: "#06d6a0",
-            color: "#0a0a0f",
-            borderRadius: 999,
-            padding: "8px 20px",
-            fontSize: 13,
-            fontWeight: 700,
-            zIndex: 999,
-          }}
-        >
+        <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "#06d6a0", color: "#0a0a0f", borderRadius: 999, padding: "8px 20px", fontSize: 13, fontWeight: 700, zIndex: 999 }}>
           Invite link copied!
         </div>
+      )}
+      {refreshing && (
+        <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "rgba(255,255,255,0.1)", backdropFilter: "blur(10px)", color: "#f0f0f5", borderRadius: 999, padding: "8px 20px", fontSize: 13, fontWeight: 600, zIndex: 999, border: "1px solid rgba(255,255,255,0.12)" }}>
+          Refreshing...
+        </div>
+      )}
+
+      {/* Artist link sheet */}
+      {selectedArtist && (
+        <ArtistSheet artist={selectedArtist} onClose={() => setSelectedArtist(null)} />
       )}
 
       <Header
@@ -1007,6 +1138,7 @@ export default function GroupApp({ groupId }: { groupId: string }) {
             members={members}
             picks={picks}
             onToggle={handleToggle}
+            onArtistTap={setSelectedArtist}
           />
         )}
         {activeTab === "picks" && (
