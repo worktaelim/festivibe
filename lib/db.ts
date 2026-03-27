@@ -155,7 +155,29 @@ export async function togglePick(
   }
 }
 
+export async function updateMember(
+  memberId: string,
+  updates: { name?: string; photo_url?: string }
+): Promise<void> {
+  const { error } = await supabase.from("members").update(updates).eq("id", memberId);
+  if (error) throw error;
+}
+
 // ── Image ─────────────────────────────────────────────────────────────────────
+
+export async function uploadCoverImage(file: File): Promise<string> {
+  const compressed = await compressImage(file, 800);
+  const res = await fetch(compressed);
+  const blob = await res.blob();
+  const ext = blob.type.split("/")[1] || "jpg";
+  const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+  const { data, error } = await supabase.storage
+    .from("covers")
+    .upload(fileName, blob, { contentType: blob.type, upsert: false });
+  if (error) throw error;
+  const { data: { publicUrl } } = supabase.storage.from("covers").getPublicUrl(data.path);
+  return publicUrl;
+}
 
 export function compressImage(file: File, maxSize = 128): Promise<string> {
   return new Promise((resolve) => {

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createGroup, addMember, randomColor, compressImage } from "@/lib/db";
+import { createGroup, addMember, randomColor, compressImage, uploadCoverImage } from "@/lib/db";
 import { CactusIcon, CameraIcon, LightningIcon } from "@/components/Icons";
 
 type Step = "home" | "cover" | "group-info" | "your-info";
@@ -17,12 +17,22 @@ export default function Home() {
   const [phone, setPhone] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [coverUploading, setCoverUploading] = useState(false);
 
   async function handleCoverPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = await compressImage(file, 800);
-    setCoverUrl(url);
+    setCoverUploading(true);
+    try {
+      const url = await uploadCoverImage(file);
+      setCoverUrl(url);
+    } catch {
+      // Storage not set up yet — fall back to base64 (OG image won't work)
+      const url = await compressImage(file, 800);
+      setCoverUrl(url);
+    } finally {
+      setCoverUploading(false);
+    }
   }
 
   async function handleProfilePhoto(e: React.ChangeEvent<HTMLInputElement>) {
@@ -120,7 +130,9 @@ export default function Home() {
                 overflow: "hidden",
                 marginBottom: 16,
               }}>
-                {coverUrl ? (
+                {coverUploading ? (
+                  <div style={{ fontSize: 13, color: "rgba(240,240,245,0.4)" }}>Uploading...</div>
+                ) : coverUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={coverUrl} alt="cover" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
@@ -133,8 +145,8 @@ export default function Home() {
               <input type="file" accept="image/*" onChange={handleCoverPhoto} style={{ display: "none" }} />
             </label>
 
-            <button onClick={() => setStep("group-info")} style={primaryBtn(false)}>
-              {coverUrl ? "Looks good" : "Skip for now"}
+            <button onClick={() => setStep("group-info")} disabled={coverUploading} style={primaryBtn(coverUploading)}>
+              {coverUploading ? "Uploading..." : coverUrl ? "Looks good" : "Skip for now"}
             </button>
           </div>
         )}

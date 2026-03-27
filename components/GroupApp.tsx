@@ -9,6 +9,7 @@ import {
 import {
   getGroup,
   addMember,
+  updateMember,
   subscribeMembers,
   subscribePicks,
   togglePick,
@@ -121,11 +122,18 @@ function JoinForm({
   group: Group;
   onJoin: (memberId: string) => void;
 }) {
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [photoUrl, setPhotoUrl] = useState("");
+  // Pre-fill from saved profile
+  const savedProfile = typeof window !== "undefined"
+    ? (() => { try { return JSON.parse(localStorage.getItem("festivibe_user") ?? "{}"); } catch { return {}; } })()
+    : {};
+
+  const [name, setName] = useState<string>(savedProfile.name ?? "");
+  const [phone, setPhone] = useState<string>(savedProfile.phone ?? "");
+  const [photoUrl, setPhotoUrl] = useState<string>(savedProfile.photo_url ?? "");
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<"photo" | "info">("photo");
+  const [nameError, setNameError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
 
   async function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -137,7 +145,13 @@ function JoinForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim()) return;
+    let valid = true;
+    if (!name.trim()) { setNameError("Name is required"); valid = false; }
+    else setNameError("");
+    if (!phone.trim()) { setPhoneError("Phone number is required"); valid = false; }
+    else setPhoneError("");
+    if (!valid) return;
+
     setLoading(true);
     try {
       const id = await addMember(group.id, {
@@ -147,6 +161,8 @@ function JoinForm({
         color: randomColor(),
       });
       localStorage.setItem(`festivibe_member_${group.id}`, id);
+      // Save profile so future groups are pre-filled
+      localStorage.setItem("festivibe_user", JSON.stringify({ name: name.trim(), phone: phone.trim(), photo_url: photoUrl }));
       onJoin(id);
     } finally {
       setLoading(false);
@@ -210,16 +226,21 @@ function JoinForm({
                   width: 88,
                   height: 88,
                   borderRadius: "50%",
-                  background: "rgba(247,37,133,0.12)",
-                  border: "2px dashed rgba(247,37,133,0.4)",
+                  background: photoUrl ? "transparent" : "rgba(247,37,133,0.12)",
+                  border: photoUrl ? "none" : "2px dashed rgba(247,37,133,0.4)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  overflow: "hidden",
                 }}
               >
-                <CameraIcon size={40} />
+                {photoUrl
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  : <CameraIcon size={40} />
+                }
               </div>
-              <div style={{ fontSize: 16, fontWeight: 600 }}>Add your photo</div>
+              <div style={{ fontSize: 16, fontWeight: 600 }}>{photoUrl ? "Change photo" : "Add your photo"}</div>
               <div style={{ fontSize: 13, color: "rgba(240,240,245,0.45)" }}>
                 Your crew will see this next to artists you pick
               </div>
@@ -237,39 +258,52 @@ function JoinForm({
                 textDecoration: "underline",
               }}
             >
-              Skip for now
+              {photoUrl ? "Continue" : "Skip for now"}
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {photoUrl && (
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: 4 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={photoUrl}
-                  alt="your photo"
-                  style={{ width: 72, height: 72, borderRadius: "50%", objectFit: "cover" }}
-                />
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {/* Photo change row */}
+            <label style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 6, cursor: "pointer" }}>
+              <div style={{ width: 52, height: 52, borderRadius: "50%", background: photoUrl ? "transparent" : "rgba(247,37,133,0.1)", border: photoUrl ? "none" : "2px dashed rgba(247,37,133,0.3)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                {photoUrl
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  : <CameraIcon size={24} />
+                }
               </div>
-            )}
-            <input
-              placeholder="Your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              style={inputStyle}
-            />
-            <input
-              placeholder="Phone number"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              type="tel"
-              style={inputStyle}
-            />
+              <span style={{ fontSize: 13, color: "#f72585", fontWeight: 600 }}>
+                {photoUrl ? "Change photo" : "Add photo (optional)"}
+              </span>
+              <input type="file" accept="image/*" onChange={handlePhoto} style={{ display: "none" }} />
+            </label>
+
+            <div>
+              <input
+                placeholder="Your name *"
+                value={name}
+                onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) setNameError(""); }}
+                style={{ ...inputStyle, borderColor: nameError ? "rgba(247,37,133,0.6)" : "rgba(255,255,255,0.1)" }}
+                autoFocus
+              />
+              {nameError && <div style={{ fontSize: 12, color: "#f72585", marginTop: 4, paddingLeft: 4 }}>{nameError}</div>}
+            </div>
+
+            <div>
+              <input
+                placeholder="Phone number *"
+                value={phone}
+                onChange={(e) => { setPhone(e.target.value); if (e.target.value.trim()) setPhoneError(""); }}
+                type="tel"
+                style={{ ...inputStyle, borderColor: phoneError ? "rgba(247,37,133,0.6)" : "rgba(255,255,255,0.1)" }}
+              />
+              {phoneError && <div style={{ fontSize: 12, color: "#f72585", marginTop: 4, paddingLeft: 4 }}>{phoneError}</div>}
+            </div>
+
             <button
               type="submit"
-              disabled={loading || !name.trim()}
-              style={primaryBtnStyle(loading || !name.trim())}
+              disabled={loading}
+              style={primaryBtnStyle(loading)}
             >
               {loading ? "Joining..." : "Join the crew"}
             </button>
@@ -826,11 +860,13 @@ function Header({
   members,
   currentMember,
   onShareInvite,
+  onEditProfile,
 }: {
   group: Group;
   members: Member[];
   currentMember: Member | undefined;
   onShareInvite: () => void;
+  onEditProfile: () => void;
 }) {
   return (
     <div style={{ position: "relative", flexShrink: 0 }}>
@@ -856,7 +892,11 @@ function Header({
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <button onClick={onShareInvite} style={inviteBtn}>+ Invite</button>
-              {currentMember && <Avatar member={currentMember} size={34} />}
+              {currentMember && (
+              <button onClick={onEditProfile} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", borderRadius: "50%" }}>
+                <Avatar member={currentMember} size={34} />
+              </button>
+            )}
             </div>
           </div>
         </div>
@@ -879,7 +919,11 @@ function Header({
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button onClick={onShareInvite} style={inviteBtn}>+ Invite</button>
-            {currentMember && <Avatar member={currentMember} size={34} />}
+            {currentMember && (
+              <button onClick={onEditProfile} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", borderRadius: "50%" }}>
+                <Avatar member={currentMember} size={34} />
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -965,6 +1009,102 @@ function ArtistSheet({ artist, onClose }: { artist: import("@/lib/artists").Arti
   );
 }
 
+// ── Edit Profile Sheet ────────────────────────────────────────────────────────
+
+function EditProfileSheet({
+  member,
+  onSave,
+  onClose,
+}: {
+  member: Member;
+  onSave: (updates: { name: string; photo_url: string }) => Promise<void>;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState(member.name);
+  const [photoUrl, setPhotoUrl] = useState(member.photo_url);
+  const [saving, setSaving] = useState(false);
+  const [nameError, setNameError] = useState("");
+
+  async function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await compressImage(file);
+    setPhotoUrl(url);
+  }
+
+  async function handleSave() {
+    if (!name.trim()) { setNameError("Name is required"); return; }
+    setSaving(true);
+    try {
+      await onSave({ name: name.trim(), photo_url: photoUrl });
+      // Keep global profile in sync
+      try {
+        const raw = localStorage.getItem("festivibe_user");
+        const existing = raw ? JSON.parse(raw) : {};
+        localStorage.setItem("festivibe_user", JSON.stringify({ ...existing, name: name.trim(), photo_url: photoUrl }));
+      } catch { /* ignore */ }
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 300 }} />
+      <div style={{
+        position: "fixed", bottom: 0, left: 0, right: 0,
+        background: "#13131a",
+        borderRadius: "24px 24px 0 0",
+        padding: "8px 20px max(28px, env(safe-area-inset-bottom))",
+        zIndex: 301,
+        boxShadow: "0 -8px 40px rgba(0,0,0,0.5)",
+      }}>
+        <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.15)", borderRadius: 2, margin: "8px auto 20px" }} />
+        <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Edit profile</div>
+
+        {/* Photo */}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+          <label style={{ cursor: "pointer", position: "relative", display: "inline-block" }}>
+            <div style={{ width: 80, height: 80, borderRadius: "50%", overflow: "hidden", background: "rgba(247,37,133,0.1)", border: "2px dashed rgba(247,37,133,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {photoUrl
+                // eslint-disable-next-line @next/next/no-img-element
+                ? <img src={photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                : <CameraIcon size={32} />
+              }
+            </div>
+            <div style={{ position: "absolute", bottom: 0, right: 0, background: "#f72585", borderRadius: "50%", width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>
+              <CameraIcon size={12} />
+            </div>
+            <input type="file" accept="image/*" onChange={handlePhoto} style={{ display: "none" }} />
+          </label>
+        </div>
+
+        <div style={{ marginBottom: 12 }}>
+          <input
+            placeholder="Your name"
+            value={name}
+            onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) setNameError(""); }}
+            style={{ ...inputStyle, borderColor: nameError ? "rgba(247,37,133,0.6)" : "rgba(255,255,255,0.1)" }}
+          />
+          {nameError && <div style={{ fontSize: 12, color: "#f72585", marginTop: 4, paddingLeft: 4 }}>{nameError}</div>}
+        </div>
+
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          style={primaryBtnStyle(saving)}
+        >
+          {saving ? "Saving..." : "Save changes"}
+        </button>
+        <button onClick={onClose} style={{ width: "100%", marginTop: 8, background: "none", border: "none", borderRadius: 14, color: "rgba(240,240,245,0.4)", fontSize: 15, fontWeight: 600, padding: "13px", cursor: "pointer" }}>
+          Cancel
+        </button>
+      </div>
+    </>
+  );
+}
+
 const inviteBtn: React.CSSProperties = {
   background: "rgba(247,37,133,0.15)",
   border: "1px solid rgba(247,37,133,0.3)",
@@ -989,6 +1129,7 @@ export default function GroupApp({ groupId }: { groupId: string }) {
   const [loading, setLoading] = useState(true);
   const [selectedArtist, setSelectedArtist] = useState<import("@/lib/artists").Artist | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
   const touchStartY = useRef(0);
 
   // Load group
@@ -1017,14 +1158,6 @@ export default function GroupApp({ groupId }: { groupId: string }) {
   const handleJoin = useCallback((id: string) => {
     setMemberId(id);
   }, []);
-
-  function handleShareInvite() {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }
 
   if (loading) {
     return (
@@ -1055,6 +1188,25 @@ export default function GroupApp({ groupId }: { groupId: string }) {
 
   const currentMember = members.find((m) => m.id === memberId);
   const myPickCount = picks.filter((p) => p.member_id === memberId).length;
+
+  function handleShareInvite() {
+    const url = window.location.href;
+    const myName = currentMember?.name ?? "Someone";
+    const text = `${myName} invites you to ${group!.name}! Come pick your artists and plan Coachella 2026 Week 2 together 🎪`;
+    if (typeof navigator.share === "function") {
+      navigator.share({ title: group!.name, text, url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      });
+    }
+  }
+
+  async function handleSaveProfile(updates: { name: string; photo_url: string }) {
+    await updateMember(memberId!, updates);
+    setMembers((prev) => prev.map((m) => m.id === memberId ? { ...m, ...updates } : m));
+  }
 
   async function handleToggle(artistId: string) {
     const pickId = `${memberId}_${artistId}`;
@@ -1124,11 +1276,21 @@ export default function GroupApp({ groupId }: { groupId: string }) {
         <ArtistSheet artist={selectedArtist} onClose={() => setSelectedArtist(null)} />
       )}
 
+      {/* Edit profile sheet */}
+      {showEditProfile && currentMember && (
+        <EditProfileSheet
+          member={currentMember}
+          onSave={handleSaveProfile}
+          onClose={() => setShowEditProfile(false)}
+        />
+      )}
+
       <Header
         group={group}
         members={members}
         currentMember={currentMember}
         onShareInvite={handleShareInvite}
+        onEditProfile={() => setShowEditProfile(true)}
       />
 
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
