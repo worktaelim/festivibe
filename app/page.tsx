@@ -66,7 +66,7 @@ export default function Home() {
       localStorage.setItem(`festivibe_member_${groupId}`, memberId);
       router.push(`/group/${groupCode}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setError(err instanceof Error ? err.message : (typeof err === "object" && err !== null && "message" in err) ? String((err as {message: unknown}).message) : JSON.stringify(err));
     } finally {
       setLoading(false);
     }
