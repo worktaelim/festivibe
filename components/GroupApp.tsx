@@ -1717,11 +1717,33 @@ export default function GroupApp({ groupId }: { groupId: string }) {
     });
   }, [groupId]);
 
-  // Check localStorage for membership (keyed by stable UUID, loaded after group)
+  // Check localStorage for membership, fallback to matching by auth user metadata
   useEffect(() => {
     if (!group) return;
     const stored = localStorage.getItem(`festivibe_member_${group.id}`);
-    if (stored) setMemberId(stored);
+    if (stored) { setMemberId(stored); return; }
+
+    // Fallback: match against auth user's phone/name in case localStorage was cleared
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) return;
+      const meta = data.user.user_metadata ?? {};
+      const phone = meta.phone ?? "";
+      const name = meta.full_name ?? meta.name ?? "";
+      if (!phone && !name) return;
+
+      supabase.from("members").select("*").eq("group_id", group.id)
+        .then(({ data: members }) => {
+          if (!members) return;
+          const match = (members as Member[]).find(
+            (m) => (phone && m.phone === phone) || (name && m.name === name)
+          );
+          if (match) {
+            localStorage.setItem(`festivibe_member_${group.id}`, match.id);
+            localStorage.setItem("festivibe_last_group", group.code);
+            setMemberId(match.id);
+          }
+        });
+    });
   }, [group]);
 
   // Subscribe to members + picks once group is confirmed
