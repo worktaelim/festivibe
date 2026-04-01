@@ -1287,7 +1287,6 @@ function Header({
               <div style={{ fontSize: 20, fontWeight: 800, color: "#1c1410", letterSpacing: -0.5, fontFamily: "'Space Mono', monospace" }}>{group.name}</div>
               <div style={{ fontSize: 12, color: "rgba(28,20,16,0.6)", marginTop: 2, fontFamily: "'Space Mono', monospace", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                 {members.length} crew · Week {group.week ?? 2}
-                <span style={{ background: "rgba(224,48,48,0.1)", border: "1.5px solid #e03030", borderRadius: 6, padding: "1px 6px", color: "#e03030", fontWeight: 700, letterSpacing: 1, fontSize: 11 }}>{group.code}</span>
                 {group.website_url && (
                   <a href={group.website_url} target="_blank" rel="noopener noreferrer"
                     style={{ color: "#2a5c28", textDecoration: "none", fontWeight: 700 }}>
@@ -1760,15 +1759,11 @@ export default function GroupApp({ groupId }: { groupId: string }) {
     const url = window.location.href;
     const myName = currentMember?.name ?? "Someone";
     const code = group!.code;
-    const text = `${myName} invites you to join ${group!.name} on Festivibe!\n\nCode: ${code}\nOr open: ${url}`;
-    if (navigator.share) {
-      navigator.share({ title: group!.name, text, url }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(text).then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      });
-    }
+    const text = `${myName} invites you to join ${group!.name} on Festivibe!\n\nInvite code: ${code}\nOr open: ${url}`;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
   }
 
   async function handleSaveProfile(updates: { name: string; photo_url: string; phone: string }) {
