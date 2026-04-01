@@ -463,18 +463,19 @@ function LineupTab({
           return (
             <div
               key={artist.id}
+              onClick={() => onArtistTap(artist)}
               style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
                 padding: "12px 0",
                 borderBottom: "1px solid rgba(28,20,16,0.1)",
+                cursor: "pointer",
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div
-                  onClick={() => onArtistTap(artist)}
-                  style={{ fontSize: 15, fontWeight: 700, marginBottom: 2, lineHeight: 1.2, cursor: "pointer", color: "#1c1410", fontFamily: "'Space Mono', monospace" }}
+                  style={{ fontSize: 15, fontWeight: 700, marginBottom: 2, lineHeight: 1.2, color: "#1c1410", fontFamily: "'Space Mono', monospace" }}
                 >
                   {artist.name}
                 </div>
@@ -495,7 +496,7 @@ function LineupTab({
                 )}
               </div>
               <button
-                onClick={() => onToggle(artist.id)}
+                onClick={(e) => { e.stopPropagation(); onToggle(artist.id); }}
                 style={{
                   width: 40,
                   height: 40,
