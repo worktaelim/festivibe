@@ -37,10 +37,11 @@ export default function Home() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       const meta = data.user?.user_metadata ?? {};
-      const first = (meta.full_name ?? meta.name ?? "").split(" ")[0];
+      const fullName = meta.full_name ?? meta.name ?? "";
+      const first = fullName.split(" ")[0];
       if (first) setUserName(first);
       // Pre-fill from auth profile so we can skip "your-info" step
-      if (meta.full_name ?? meta.name) setName(meta.full_name ?? meta.name ?? "");
+      if (fullName) setName(fullName);
       if (meta.phone) setPhone(meta.phone);
       if (meta.photo_url ?? meta.avatar_url) setPhotoUrl(meta.photo_url ?? meta.avatar_url ?? "");
     });
@@ -410,6 +411,17 @@ export default function Home() {
       <div style={{ marginTop: 24, fontSize: 12, color: "rgba(28,20,16,0.35)", zIndex: 1, fontFamily: "'Space Mono', monospace" }}>
         Share the link · Pick your artists · See who&apos;s in
       </div>
+
+      {/* Sign out */}
+      <button
+        onClick={async () => {
+          await supabase.auth.signOut();
+          localStorage.removeItem("festivibe_last_group");
+        }}
+        style={{ marginTop: 12, background: "none", border: "none", color: "rgba(28,20,16,0.35)", fontSize: 12, cursor: "pointer", fontFamily: "'Space Mono', monospace", zIndex: 1 }}
+      >
+        Sign out
+      </button>
     </div>
     </AuthGate>
   );
