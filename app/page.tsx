@@ -26,6 +26,7 @@ export default function Home() {
   const [photoUrl, setPhotoUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [coverUploading, setCoverUploading] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleCoverPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -53,6 +54,7 @@ export default function Home() {
     e.preventDefault();
     if (!name.trim() || !groupName.trim() || !week) return;
     setLoading(true);
+    setError("");
     try {
       const { id: groupId, code: groupCode } = await createGroup(groupName.trim(), coverUrl, websiteUrl.trim(), week);
       const memberId = await addMember(groupId, {
@@ -63,6 +65,8 @@ export default function Home() {
       });
       localStorage.setItem(`festivibe_member_${groupId}`, memberId);
       router.push(`/group/${groupCode}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -296,6 +300,11 @@ export default function Home() {
             <button type="submit" disabled={loading || !name.trim()} style={primaryBtn(loading || !name.trim())}>
               {loading ? "Creating..." : "Create group"}
             </button>
+            {error && (
+              <div style={{ marginTop: 12, padding: "10px 14px", background: "rgba(247,37,133,0.1)", border: "1px solid rgba(247,37,133,0.3)", borderRadius: 12, fontSize: 13, color: "#f72585" }}>
+                {error}
+              </div>
+            )}
           </form>
         )}
       </div>
