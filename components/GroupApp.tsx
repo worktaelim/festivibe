@@ -838,7 +838,7 @@ const TT_SCHED_START = 13 * 60;
 const TT_SCHED_END   = 25 * 60;
 const TT_TOTAL_H     = (TT_SCHED_END - TT_SCHED_START) * TT_PX_PER_MIN; // 1080px
 const TT_TIME_W      = 40;  // left time-label column width
-const TT_STAGE_W     = 82;  // each stage column width
+const TT_STAGE_W     = 95;  // each stage column width
 const TT_HEADER_H    = 46;  // sticky stage-name header height
 
 function TimetableTab({
@@ -966,10 +966,12 @@ function TimetableTab({
         ))}
       </div>
 
-      {/* Empty state */}
       {/* Grid: single container scrolls both axes */}
       {activeStages.length > 0 && (
-        <div ref={scrollRef} style={{ flex: 1, overflow: "auto", WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"] }}>
+        <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+          {/* Right-edge fade hint */}
+          <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: 28, background: "linear-gradient(to right, transparent, rgba(240,235,224,0.85))", zIndex: 25, pointerEvents: "none" }} />
+        <div ref={scrollRef} style={{ height: "100%", overflow: "auto", WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"], overflowX: "scroll" }}>
           <div style={{ minWidth: TT_TIME_W + activeStages.length * stageW, display: "flex", flexDirection: "column" }}>
 
             {/* Sticky stage-name header row */}
@@ -1139,6 +1141,7 @@ function TimetableTab({
               })}
             </div>
           </div>
+        </div>
         </div>
       )}
     </div>
