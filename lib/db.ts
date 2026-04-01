@@ -98,17 +98,31 @@ export function subscribeMembers(
     .eq("group_id", groupId)
     .then(({ data }) => cb((data as Member[]) ?? []));
 
-  // Real-time updates
+  // Real-time updates — no filter on DELETE because Postgres doesn't include
+  // row data in DELETE events, so group_id filter would never match on delete
   const channel = supabase
     .channel(`members:${groupId}`)
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: "members", filter: `group_id=eq.${groupId}` },
+      { event: "INSERT", schema: "public", table: "members", filter: `group_id=eq.${groupId}` },
       () => {
-        supabase
-          .from("members")
-          .select("*")
-          .eq("group_id", groupId)
+        supabase.from("members").select("*").eq("group_id", groupId)
+          .then(({ data }) => cb((data as Member[]) ?? []));
+      }
+    )
+    .on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "members", filter: `group_id=eq.${groupId}` },
+      () => {
+        supabase.from("members").select("*").eq("group_id", groupId)
+          .then(({ data }) => cb((data as Member[]) ?? []));
+      }
+    )
+    .on(
+      "postgres_changes",
+      { event: "DELETE", schema: "public", table: "members" },
+      () => {
+        supabase.from("members").select("*").eq("group_id", groupId)
           .then(({ data }) => cb((data as Member[]) ?? []));
       }
     )
@@ -130,17 +144,22 @@ export function subscribePicks(
     .eq("group_id", groupId)
     .then(({ data }) => cb((data as ArtistPick[]) ?? []));
 
-  // Real-time updates
+  // Real-time updates — DELETE events don't carry row data so no filter on delete
   const channel = supabase
     .channel(`picks:${groupId}`)
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: "picks", filter: `group_id=eq.${groupId}` },
+      { event: "INSERT", schema: "public", table: "picks", filter: `group_id=eq.${groupId}` },
       () => {
-        supabase
-          .from("picks")
-          .select("*")
-          .eq("group_id", groupId)
+        supabase.from("picks").select("*").eq("group_id", groupId)
+          .then(({ data }) => cb((data as ArtistPick[]) ?? []));
+      }
+    )
+    .on(
+      "postgres_changes",
+      { event: "DELETE", schema: "public", table: "picks" },
+      () => {
+        supabase.from("picks").select("*").eq("group_id", groupId)
           .then(({ data }) => cb((data as ArtistPick[]) ?? []));
       }
     )
