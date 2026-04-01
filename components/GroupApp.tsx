@@ -1719,7 +1719,23 @@ export default function GroupApp({ groupId }: { groupId: string }) {
     if (!group) return;
     const unsub1 = subscribeMembers(group.id, setMembers);
     const unsub2 = subscribePicks(group.id, setPicks);
-    return () => { unsub1(); unsub2(); };
+
+    // Fallback: re-fetch when tab becomes visible (in case realtime missed updates)
+    function onVisible() {
+      if (document.visibilityState === "visible") {
+        supabase.from("members").select("*").eq("group_id", group!.id)
+          .then(({ data }) => { if (data) setMembers(data as Member[]); });
+        supabase.from("picks").select("*").eq("group_id", group!.id)
+          .then(({ data }) => { if (data) setPicks(data as ArtistPick[]); });
+      }
+    }
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      unsub1();
+      unsub2();
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [group]);
 
   const handleJoin = useCallback((id: string) => {
