@@ -885,9 +885,7 @@ function TimetableTab({
   const dayArtists = ARTISTS.filter(
     (a) => a.day === activeDay && a.stage && a.startTime && a.endTime
   );
-  const visibleArtists = myOnly
-    ? dayArtists.filter((a) => myPickSet.has(a.id))
-    : dayArtists;
+  const visibleArtists = dayArtists;
 
   const activeStages = STAGES.filter((s) =>
     visibleArtists.some((a) => a.stage === s)
@@ -969,13 +967,6 @@ function TimetableTab({
       </div>
 
       {/* Empty state */}
-      {activeStages.length === 0 && myOnly && (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: 32, textAlign: "center" }}>
-          <div style={{ fontSize: 14, color: "rgba(28,20,16,0.5)", fontFamily: "'Space Mono', monospace" }}>No picks on {dayLabels[activeDay]} yet</div>
-          <div style={{ fontSize: 13, color: "rgba(28,20,16,0.35)", fontFamily: "'Space Mono', monospace" }}>Heart artists in the Lineup tab</div>
-        </div>
-      )}
-
       {/* Grid: single container scrolls both axes */}
       {activeStages.length > 0 && (
         <div ref={scrollRef} style={{ flex: 1, overflow: "auto", WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"] }}>
@@ -1067,6 +1058,7 @@ function TimetableTab({
                       const height = blkH(artist.startTime!, artist.endTime!);
                       const isPicked = myPickSet.has(artist.id);
                       const pickers = pickersForArtist(artist.id);
+                      const dimmed = myOnly && !isPicked;
                       return (
                         <div
                           key={artist.id}
@@ -1080,6 +1072,7 @@ function TimetableTab({
                             background: isPicked
                               ? "rgba(224,48,48,0.22)"
                               : pickers.length > 0 ? `${stageColor}28` : `${stageColor}12`,
+                            opacity: dimmed ? 0.3 : 1,
                             display: "flex", flexDirection: "column",
                             alignItems: "flex-start", justifyContent: "flex-start",
                             padding: "4px 5px", overflow: "hidden",
@@ -1262,18 +1255,77 @@ function BottomNav({
 
 // ── Top header ────────────────────────────────────────────────────────────────
 
+function GroupInfoSheet({ group, members, onClose }: { group: Group; members: Member[]; onClose: () => void }) {
+  const weekDates = (group.week ?? 2) === 1 ? "Apr 10–12" : "Apr 17–19";
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(28,20,16,0.55)", zIndex: 300 }} />
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#faf7ed", borderRadius: "16px 16px 0 0", border: "2px solid #1c1410", borderBottom: "none", zIndex: 301, boxShadow: "0 -4px 0 #1c1410", overflowY: "auto", maxHeight: "85dvh" }}>
+        <div style={{ width: 36, height: 4, background: "rgba(28,20,16,0.2)", borderRadius: 2, margin: "8px auto 0" }} />
+
+        {/* Cover */}
+        {group.cover_url && (
+          <div style={{ height: 160, overflow: "hidden", margin: "16px 20px 0", borderRadius: 10, border: "2px solid #1c1410", boxShadow: "3px 3px 0 #1c1410" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={group.cover_url} alt="cover" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
+        )}
+
+        <div style={{ padding: "20px 20px max(32px, env(safe-area-inset-bottom))" }}>
+          {/* Group name + meta */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 24, fontWeight: 800, fontFamily: "'Space Mono', monospace", color: "#1c1410", marginBottom: 6 }}>{group.name}</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              <span style={{ background: "rgba(224,48,48,0.1)", border: "1.5px solid #e03030", borderRadius: 999, padding: "3px 10px", fontSize: 12, color: "#e03030", fontWeight: 700, fontFamily: "'Space Mono', monospace" }}>
+                Week {group.week ?? 2} · {weekDates}
+              </span>
+              {group.website_url && (
+                <a href={group.website_url} target="_blank" rel="noopener noreferrer" style={{ background: "rgba(42,92,40,0.1)", border: "1.5px solid #2a5c28", borderRadius: 999, padding: "3px 10px", fontSize: 12, color: "#2a5c28", fontWeight: 700, fontFamily: "'Space Mono', monospace", textDecoration: "none" }}>
+                  Official site ↗
+                </a>
+              )}
+            </div>
+          </div>
+
+          {/* Crew */}
+          <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(28,20,16,0.45)", marginBottom: 12, textTransform: "uppercase", letterSpacing: 1, fontFamily: "'Space Mono', monospace" }}>
+            Crew · {members.length}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+            {members.map((m) => (
+              <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <Avatar member={m} size={40} />
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, fontFamily: "'Space Mono', monospace", color: "#1c1410" }}>{m.name}</div>
+                  {m.phone && <div style={{ fontSize: 12, color: "rgba(28,20,16,0.45)", fontFamily: "'Space Mono', monospace" }}>{m.phone}</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button onClick={onClose} style={{ width: "100%", background: "none", border: "2px solid #1c1410", borderRadius: 10, color: "rgba(28,20,16,0.6)", fontSize: 15, fontWeight: 700, padding: "13px", cursor: "pointer", fontFamily: "'Space Mono', monospace", boxShadow: "2px 2px 0 #1c1410" }}>
+            Close
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function Header({
   group,
   members,
   currentMember,
   onShareInvite,
   onEditProfile,
+  onGroupTap,
 }: {
   group: Group;
   members: Member[];
   currentMember: Member | undefined;
   onShareInvite: () => void;
   onEditProfile: () => void;
+  onGroupTap: () => void;
 }) {
   return (
     <div style={{ position: "relative", flexShrink: 0 }}>
@@ -1286,7 +1338,7 @@ function Header({
           {/* Overlay row */}
           <div style={{ position: "absolute", bottom: 12, left: 16, right: 16, display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: "#1c1410", letterSpacing: -0.5, fontFamily: "'Space Mono', monospace" }}>{group.name}</div>
+              <div onClick={onGroupTap} style={{ fontSize: 20, fontWeight: 800, color: "#1c1410", letterSpacing: -0.5, fontFamily: "'Space Mono', monospace", cursor: "pointer" }}>{group.name} <span style={{ fontSize: 13, opacity: 0.4 }}>›</span></div>
               <div style={{ fontSize: 12, color: "rgba(28,20,16,0.6)", marginTop: 2, fontFamily: "'Space Mono', monospace", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                 {members.length} crew · Week {group.week ?? 2}
                 {group.website_url && (
@@ -1311,8 +1363,8 @@ function Header({
         /* No cover — compact bar */
         <div style={{ padding: "14px 16px 12px", borderBottom: "2px solid #1c1410", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#faf7ed" }}>
           <div>
-            <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: -0.5, color: "#1c1410", fontFamily: "'Space Mono', monospace" }}>
-              {group.name}
+            <div onClick={onGroupTap} style={{ fontSize: 18, fontWeight: 800, letterSpacing: -0.5, color: "#1c1410", fontFamily: "'Space Mono', monospace", cursor: "pointer" }}>
+              {group.name} <span style={{ fontSize: 13, opacity: 0.4 }}>›</span>
             </div>
             <div style={{ fontSize: 12, color: "rgba(28,20,16,0.5)", marginTop: 1, fontFamily: "'Space Mono', monospace", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
               {members.length} crew · Week {group.week ?? 2}
@@ -1706,6 +1758,7 @@ export default function GroupApp({ groupId }: { groupId: string }) {
   const [selectedArtist, setSelectedArtist] = useState<import("@/lib/artists").Artist | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showGroupInfo, setShowGroupInfo] = useState(false);
   const touchStartY = useRef(0);
 
   // Load group
@@ -1904,6 +1957,11 @@ export default function GroupApp({ groupId }: { groupId: string }) {
         />
       )}
 
+      {/* Group info sheet */}
+      {showGroupInfo && (
+        <GroupInfoSheet group={group} members={members} onClose={() => setShowGroupInfo(false)} />
+      )}
+
       {/* Edit profile sheet */}
       {showEditProfile && currentMember && (
         <EditProfileSheet
@@ -1920,6 +1978,7 @@ export default function GroupApp({ groupId }: { groupId: string }) {
         currentMember={currentMember}
         onShareInvite={handleShareInvite}
         onEditProfile={() => setShowEditProfile(true)}
+        onGroupTap={() => setShowGroupInfo(true)}
       />
 
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
