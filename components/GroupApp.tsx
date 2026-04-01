@@ -1017,7 +1017,7 @@ function TimetableTab({
                     right: 6, left: 0,
                     textAlign: "right",
                     fontSize: 10, fontWeight: 600,
-                    color: "rgba(28,20,16,0.35)",
+                    color: "rgba(28,20,16,0.6)",
                     whiteSpace: "nowrap",
                     fontFamily: "'Space Mono', monospace",
                   }}>
@@ -1076,16 +1076,13 @@ function TimetableTab({
                           <button
                             onClick={(e) => { e.stopPropagation(); onToggle(artist.id); }}
                             style={{
-                              position: "absolute", top: 3, right: 3,
-                              width: 18, height: 18, borderRadius: "50%",
-                              border: "none",
-                              background: isPicked ? "rgba(224,48,48,0.4)" : "rgba(28,20,16,0.1)",
-                              cursor: "pointer", padding: 0,
+                              position: "absolute", top: 2, right: 2,
+                              border: "none", background: "none",
+                              cursor: "pointer", padding: 2,
                               display: "flex", alignItems: "center", justifyContent: "center",
-                              flexShrink: 0,
                             }}
                           >
-                            <HeartIcon size={10} filled={isPicked} />
+                            <HeartIcon size={13} filled={isPicked} />
                           </button>
                           {/* Tap rest to open sheet */}
                           <div onClick={() => onArtistTap(artist)} style={{ width: "100%", cursor: "pointer", display: "flex", flexDirection: "column", gap: 2, paddingRight: 18 }}>

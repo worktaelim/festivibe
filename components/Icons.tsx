@@ -117,7 +117,7 @@ export function HeartIcon({ size = 24, filled = false }: { size?: number; filled
         <path
           d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
           fill="none"
-          stroke="rgba(240,240,245,0.4)"
+          stroke="rgba(28,20,16,0.55)"
           strokeWidth="1.8"
         />
       )}
@@ -197,7 +197,7 @@ export function MusicIcon({ size = 22 }: { size?: number }) {
 }
 
 export function MusicIconLarge({ size = 22, active = false }: { size?: number; active?: boolean }) {
-  const color = active ? "url(#music-nav-active)" : "rgba(240,240,245,0.5)";
+  const color = active ? "#e03030" : "rgba(28,20,16,0.5)";
   return (
     <svg width={size} height={size} viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -227,8 +227,8 @@ export function HeartNavIcon({ size = 22, active = false }: { size?: number; act
       </defs>
       <path
         d="M11 19.27l-1.33-1.21C4.95 14.14 2 11.26 2 7.8 2 5 4.24 3 7 3c1.6 0 3.13.74 4 1.91C11.87 3.74 13.4 3 15 3c2.76 0 5 2 5 4.8 0 3.46-2.95 6.34-7.67 10.26L11 19.27z"
-        fill={active ? "url(#heart-nav-active)" : "none"}
-        stroke={active ? "none" : "rgba(240,240,245,0.4)"}
+        fill={active ? "#e03030" : "none"}
+        stroke={active ? "none" : "rgba(28,20,16,0.5)"}
         strokeWidth="1.6"
         filter={active ? "url(#heart-nav-glow)" : "none"}
       />
@@ -238,7 +238,7 @@ export function HeartNavIcon({ size = 22, active = false }: { size?: number; act
 }
 
 export function CrewNavIcon({ size = 22, active = false }: { size?: number; active?: boolean }) {
-  const fill = active ? "url(#crew-nav-active)" : "rgba(240,240,245,0.4)";
+  const fill = active ? "#e03030" : "rgba(28,20,16,0.45)";
   return (
     <svg width={size} height={size} viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
