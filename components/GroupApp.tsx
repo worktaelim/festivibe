@@ -115,6 +115,13 @@ function AvatarStack({
 
 // ── Join form ─────────────────────────────────────────────────────────────────
 
+const PRESET_AVATARS = [
+  { id: "van",    src: "/avatars/van.png",    label: "Van" },
+  { id: "palms",  src: "/avatars/palms.png",  label: "Palms" },
+  { id: "tshirt", src: "/avatars/tshirt.png", label: "T-Shirt" },
+  { id: "tent",   src: "/avatars/tent.png",   label: "Tent" },
+];
+
 function JoinForm({
   group,
   onJoin,
@@ -122,7 +129,6 @@ function JoinForm({
   group: Group;
   onJoin: (memberId: string) => void;
 }) {
-  // Pre-fill from saved profile
   const savedProfile = typeof window !== "undefined"
     ? (() => { try { return JSON.parse(localStorage.getItem("festivibe_user") ?? "{}"); } catch { return {}; } })()
     : {};
@@ -131,16 +137,14 @@ function JoinForm({
   const [phone, setPhone] = useState<string>(savedProfile.phone ?? "");
   const [photoUrl, setPhotoUrl] = useState<string>(savedProfile.photo_url ?? "");
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState<"photo" | "info">("photo");
   const [nameError, setNameError] = useState("");
   const [phoneError, setPhoneError] = useState("");
 
-  async function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     const url = await compressImage(file);
     setPhotoUrl(url);
-    setStep("info");
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -161,13 +165,14 @@ function JoinForm({
         color: randomColor(),
       });
       localStorage.setItem(`festivibe_member_${group.id}`, id);
-      // Save profile so future groups are pre-filled
       localStorage.setItem("festivibe_user", JSON.stringify({ name: name.trim(), phone: phone.trim(), photo_url: photoUrl }));
       onJoin(id);
     } finally {
       setLoading(false);
     }
   }
+
+  const isPreset = PRESET_AVATARS.some((a) => a.src === photoUrl);
 
   return (
     <div
@@ -179,10 +184,11 @@ function JoinForm({
         alignItems: "center",
         justifyContent: "center",
         padding: "24px 20px",
+        overflowY: "auto",
       }}
     >
       {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: 40 }}>
+      <div style={{ textAlign: "center", marginBottom: 32 }}>
         <div style={{ marginBottom: 8 }}><CactusIcon size={48} /></div>
         <div className="gradient-text" style={{ fontSize: 28, fontWeight: 800, letterSpacing: -1 }}>
           Festivibe
@@ -210,105 +216,131 @@ function JoinForm({
           <div style={{ fontSize: 22, fontWeight: 700 }}>{group.name}</div>
         </div>
 
-        {step === "photo" ? (
-          <div style={{ textAlign: "center" }}>
-            <label
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 12,
-                cursor: "pointer",
-              }}
-            >
-              <div
-                style={{
-                  width: 88,
-                  height: 88,
-                  borderRadius: "50%",
-                  background: photoUrl ? "transparent" : "rgba(247,37,133,0.12)",
-                  border: photoUrl ? "none" : "2px dashed rgba(247,37,133,0.4)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  overflow: "hidden",
-                }}
-              >
-                {photoUrl
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+          {/* Avatar section */}
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(240,240,245,0.45)", marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.8 }}>
+              Pick your vibe
+            </div>
+
+            {/* Preset grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 12 }}>
+              {PRESET_AVATARS.map((preset) => {
+                const selected = photoUrl === preset.src;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => setPhotoUrl(selected ? "" : preset.src)}
+                    style={{
+                      position: "relative",
+                      borderRadius: 16,
+                      border: selected
+                        ? "2.5px solid #f72585"
+                        : "2px solid rgba(255,255,255,0.08)",
+                      background: selected
+                        ? "rgba(247,37,133,0.12)"
+                        : "rgba(255,255,255,0.04)",
+                      padding: 6,
+                      cursor: "pointer",
+                      aspectRatio: "1",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                      transition: "border-color 0.15s, background 0.15s",
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={preset.src}
+                      alt={preset.label}
+                      style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                    />
+                    {selected && (
+                      <div style={{
+                        position: "absolute", top: 4, right: 4,
+                        width: 16, height: 16, borderRadius: "50%",
+                        background: "#f72585",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 10, color: "#fff", fontWeight: 800,
+                      }}>
+                        ✓
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Upload own photo */}
+            <label style={{
+              display: "flex", alignItems: "center", gap: 12,
+              background: "rgba(255,255,255,0.04)",
+              border: `1.5px solid ${!isPreset && photoUrl ? "rgba(247,37,133,0.4)" : "rgba(255,255,255,0.08)"}`,
+              borderRadius: 14, padding: "10px 14px",
+              cursor: "pointer",
+            }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: "50%",
+                background: !isPreset && photoUrl ? "transparent" : "rgba(247,37,133,0.1)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                overflow: "hidden", flexShrink: 0,
+              }}>
+                {!isPreset && photoUrl
                   // eslint-disable-next-line @next/next/no-img-element
                   ? <img src={photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  : <CameraIcon size={40} />
+                  : <CameraIcon size={22} />
                 }
               </div>
-              <div style={{ fontSize: 16, fontWeight: 600 }}>{photoUrl ? "Change photo" : "Add your photo"}</div>
-              <div style={{ fontSize: 13, color: "rgba(240,240,245,0.45)" }}>
-                Your crew will see this next to artists you pick
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: !isPreset && photoUrl ? "#f72585" : "rgba(240,240,245,0.7)" }}>
+                  {!isPreset && photoUrl ? "Custom photo selected" : "Upload your own photo"}
+                </div>
+                <div style={{ fontSize: 11, color: "rgba(240,240,245,0.35)", marginTop: 1 }}>optional</div>
               </div>
-              <input type="file" accept="image/*" onChange={handlePhoto} style={{ display: "none" }} />
+              {!isPreset && photoUrl && (
+                <div style={{ marginLeft: "auto", width: 20, height: 20, borderRadius: "50%", background: "#f72585", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#fff", fontWeight: 800 }}>
+                  ✓
+                </div>
+              )}
+              <input type="file" accept="image/*" onChange={handleUpload} style={{ display: "none" }} />
             </label>
-            <button
-              onClick={() => setStep("info")}
-              style={{
-                marginTop: 20,
-                background: "none",
-                border: "none",
-                color: "rgba(240,240,245,0.4)",
-                fontSize: 13,
-                cursor: "pointer",
-                textDecoration: "underline",
-              }}
-            >
-              {photoUrl ? "Continue" : "Skip for now"}
-            </button>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {/* Photo change row */}
-            <label style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 6, cursor: "pointer" }}>
-              <div style={{ width: 52, height: 52, borderRadius: "50%", background: photoUrl ? "transparent" : "rgba(247,37,133,0.1)", border: photoUrl ? "none" : "2px dashed rgba(247,37,133,0.3)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
-                {photoUrl
-                  // eslint-disable-next-line @next/next/no-img-element
-                  ? <img src={photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  : <CameraIcon size={24} />
-                }
-              </div>
-              <span style={{ fontSize: 13, color: "#f72585", fontWeight: 600 }}>
-                {photoUrl ? "Change photo" : "Add photo (optional)"}
-              </span>
-              <input type="file" accept="image/*" onChange={handlePhoto} style={{ display: "none" }} />
-            </label>
 
-            <div>
-              <input
-                placeholder="Your name *"
-                value={name}
-                onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) setNameError(""); }}
-                style={{ ...inputStyle, borderColor: nameError ? "rgba(247,37,133,0.6)" : "rgba(255,255,255,0.1)" }}
-                autoFocus
-              />
-              {nameError && <div style={{ fontSize: 12, color: "#f72585", marginTop: 4, paddingLeft: 4 }}>{nameError}</div>}
-            </div>
+          {/* Name */}
+          <div>
+            <input
+              placeholder="Your name *"
+              value={name}
+              onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) setNameError(""); }}
+              style={{ ...inputStyle, borderColor: nameError ? "rgba(247,37,133,0.6)" : "rgba(255,255,255,0.1)" }}
+              autoFocus
+            />
+            {nameError && <div style={{ fontSize: 12, color: "#f72585", marginTop: 4, paddingLeft: 4 }}>{nameError}</div>}
+          </div>
 
-            <div>
-              <input
-                placeholder="Phone number *"
-                value={phone}
-                onChange={(e) => { setPhone(e.target.value); if (e.target.value.trim()) setPhoneError(""); }}
-                type="tel"
-                style={{ ...inputStyle, borderColor: phoneError ? "rgba(247,37,133,0.6)" : "rgba(255,255,255,0.1)" }}
-              />
-              {phoneError && <div style={{ fontSize: 12, color: "#f72585", marginTop: 4, paddingLeft: 4 }}>{phoneError}</div>}
-            </div>
+          {/* Phone */}
+          <div>
+            <input
+              placeholder="Phone number *"
+              value={phone}
+              onChange={(e) => { setPhone(e.target.value); if (e.target.value.trim()) setPhoneError(""); }}
+              type="tel"
+              style={{ ...inputStyle, borderColor: phoneError ? "rgba(247,37,133,0.6)" : "rgba(255,255,255,0.1)" }}
+            />
+            {phoneError && <div style={{ fontSize: 12, color: "#f72585", marginTop: 4, paddingLeft: 4 }}>{phoneError}</div>}
+          </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              style={primaryBtnStyle(loading)}
-            >
-              {loading ? "Joining..." : "Join the crew"}
-            </button>
-          </form>
-        )}
+          <button
+            type="submit"
+            disabled={loading}
+            style={primaryBtnStyle(loading)}
+          >
+            {loading ? "Joining..." : "Join the crew"}
+          </button>
+        </form>
       </div>
     </div>
   );
@@ -1440,19 +1472,47 @@ function EditProfileSheet({
         <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.15)", borderRadius: 2, margin: "8px auto 20px" }} />
         <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Edit profile</div>
 
-        {/* Photo */}
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
-          <label style={{ cursor: "pointer", position: "relative", display: "inline-block" }}>
-            <div style={{ width: 80, height: 80, borderRadius: "50%", overflow: "hidden", background: "rgba(247,37,133,0.1)", border: "2px dashed rgba(247,37,133,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {photoUrl
+        {/* Photo — preset grid + upload */}
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(240,240,245,0.45)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.8 }}>
+            Pick your vibe
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 10 }}>
+            {PRESET_AVATARS.map((preset) => {
+              const selected = photoUrl === preset.src;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => setPhotoUrl(selected ? "" : preset.src)}
+                  style={{
+                    position: "relative", borderRadius: 14, aspectRatio: "1",
+                    border: selected ? "2.5px solid #f72585" : "2px solid rgba(255,255,255,0.08)",
+                    background: selected ? "rgba(247,37,133,0.12)" : "rgba(255,255,255,0.04)",
+                    padding: 5, cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={preset.src} alt={preset.label} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                  {selected && (
+                    <div style={{ position: "absolute", top: 3, right: 3, width: 14, height: 14, borderRadius: "50%", background: "#f72585", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: "#fff", fontWeight: 800 }}>✓</div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          <label style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "8px 12px", cursor: "pointer" }}>
+            <div style={{ width: 36, height: 36, borderRadius: "50%", overflow: "hidden", background: "rgba(247,37,133,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              {photoUrl && !PRESET_AVATARS.some((a) => a.src === photoUrl)
                 // eslint-disable-next-line @next/next/no-img-element
                 ? <img src={photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                : <CameraIcon size={32} />
+                : <CameraIcon size={20} />
               }
             </div>
-            <div style={{ position: "absolute", bottom: 0, right: 0, background: "#f72585", borderRadius: "50%", width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>
-              <CameraIcon size={12} />
-            </div>
+            <span style={{ fontSize: 13, color: "#f72585", fontWeight: 600 }}>
+              {photoUrl && !PRESET_AVATARS.some((a) => a.src === photoUrl) ? "Custom photo" : "Upload your own"}
+            </span>
             <input type="file" accept="image/*" onChange={handlePhoto} style={{ display: "none" }} />
           </label>
         </div>

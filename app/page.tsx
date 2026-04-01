@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation";
 import { createGroup, addMember, randomColor, compressImage, uploadCoverImage } from "@/lib/db";
 import { CactusIcon, CameraIcon, LightningIcon } from "@/components/Icons";
 
+const PRESET_AVATARS = [
+  { id: "van",    src: "/avatars/van.png",    label: "Van" },
+  { id: "palms",  src: "/avatars/palms.png",  label: "Palms" },
+  { id: "tshirt", src: "/avatars/tshirt.png", label: "T-Shirt" },
+  { id: "tent",   src: "/avatars/tent.png",   label: "Tent" },
+];
+
 type Step = "home" | "cover" | "group-info" | "your-info";
 
 export default function Home() {
@@ -102,7 +109,7 @@ export default function Home() {
             </button>
             <div style={{ textAlign: "center", color: "rgba(240,240,245,0.3)", fontSize: 12, margin: "4px 0" }}>— or —</div>
             <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "14px", textAlign: "center", fontSize: 14, color: "rgba(240,240,245,0.45)" }}>
-              Got an invite link? Open it on your phone to join a group.
+              Got an invite link? Open it in any browser to join a group.
             </div>
           </div>
         )}
@@ -194,20 +201,50 @@ export default function Home() {
               Your crew will see your name and photo
             </div>
 
-            <label style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16, cursor: "pointer" }}>
-              <div style={{ width: 56, height: 56, borderRadius: "50%", background: photoUrl ? "transparent" : "rgba(247,37,133,0.1)", border: photoUrl ? "none" : "2px dashed rgba(247,37,133,0.4)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
-                {photoUrl
-                  // eslint-disable-next-line @next/next/no-img-element
-                  ? <img src={photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  : <CameraIcon size={28} />
-                }
+            {/* Preset avatar grid */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(240,240,245,0.45)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.8 }}>
+                Pick your vibe
               </div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "#f72585" }}>{photoUrl ? "Change photo" : "Add your photo"}</div>
-                <div style={{ fontSize: 12, color: "rgba(240,240,245,0.4)" }}>Optional but fun</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 10 }}>
+                {PRESET_AVATARS.map((preset) => {
+                  const selected = photoUrl === preset.src;
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => setPhotoUrl(selected ? "" : preset.src)}
+                      style={{
+                        position: "relative", borderRadius: 14, aspectRatio: "1",
+                        border: selected ? "2.5px solid #f72585" : "2px solid rgba(255,255,255,0.08)",
+                        background: selected ? "rgba(247,37,133,0.12)" : "rgba(255,255,255,0.04)",
+                        padding: 5, cursor: "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
+                      }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={preset.src} alt={preset.label} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                      {selected && (
+                        <div style={{ position: "absolute", top: 3, right: 3, width: 14, height: 14, borderRadius: "50%", background: "#f72585", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: "#fff", fontWeight: 800 }}>✓</div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
-              <input type="file" accept="image/*" onChange={handleProfilePhoto} style={{ display: "none" }} />
-            </label>
+              <label style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "8px 12px", cursor: "pointer" }}>
+                <div style={{ width: 36, height: 36, borderRadius: "50%", overflow: "hidden", background: "rgba(247,37,133,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {photoUrl && !PRESET_AVATARS.some((a) => a.src === photoUrl)
+                    // eslint-disable-next-line @next/next/no-img-element
+                    ? <img src={photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    : <CameraIcon size={20} />
+                  }
+                </div>
+                <span style={{ fontSize: 13, color: "#f72585", fontWeight: 600 }}>
+                  {photoUrl && !PRESET_AVATARS.some((a) => a.src === photoUrl) ? "Custom photo" : "Upload your own"}
+                </span>
+                <input type="file" accept="image/*" onChange={handleProfilePhoto} style={{ display: "none" }} />
+              </label>
+            </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <input placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} required style={inputStyle} />
