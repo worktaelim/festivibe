@@ -143,7 +143,7 @@ export default function Home() {
         {step === "home" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {userName && (
-              <div style={{ fontSize: 15, fontFamily: "'Space Mono', monospace", color: "rgba(28,20,16,0.6)", marginBottom: 4 }}>
+              <div style={{ fontSize: 18, fontFamily: "'Space Mono', monospace", color: "rgba(28,20,16,0.6)", marginBottom: 4, textAlign: "center" }}>
                 Hi <strong style={{ color: "#1c1410" }}>{userName}</strong>! 👋
               </div>
             )}
