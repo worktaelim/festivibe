@@ -239,7 +239,7 @@ function JoinForm({
                       border: selected
                         ? "2.5px solid #f72585"
                         : "2px solid rgba(255,255,255,0.08)",
-                      background: selected ? "rgba(247,37,133,0.15)" : "#ffd16640",
+                      background: selected ? "rgba(247,37,133,0.15)" : "#f8d377",
                       padding: 6,
                       cursor: "pointer",
                       aspectRatio: "1",
@@ -1560,7 +1560,7 @@ function EditProfileSheet({
                         style={{
                           position: "relative", borderRadius: 14, aspectRatio: "1",
                           border: selected ? "2.5px solid #f72585" : "2px solid rgba(255,255,255,0.08)",
-                          background: selected ? "rgba(247,37,133,0.15)" : "#ffd16640",
+                          background: selected ? "rgba(247,37,133,0.15)" : "#f8d377",
                           padding: 5, cursor: "pointer",
                           display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
                         }}>
