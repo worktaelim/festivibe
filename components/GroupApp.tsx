@@ -809,21 +809,18 @@ const STAGE_COLORS: Record<string, string> = {
   "Quasar":          "#e9c46a",
 };
 
-// Day schedule window: 13:00–25:00 (1am next day) = 720 min
-const SCHED_START = 13 * 60; // 780 min... use 13:00
-const SCHED_END   = 25 * 60; // 25:00 = 1500 min
-const SCHED_RANGE = SCHED_END - SCHED_START; // 720 min
-
-const PX_PER_MIN = 1.7; // pixels per minute → 720 * 1.7 ≈ 1224px total width
-const STAGE_LABEL_W = 80;
-const ROW_H = 56;
-const RULER_H = 28;
+const TT_PX_PER_MIN = 1.5;
+const TT_SCHED_START = 13 * 60;
+const TT_SCHED_END   = 25 * 60;
+const TT_TOTAL_H     = (TT_SCHED_END - TT_SCHED_START) * TT_PX_PER_MIN; // 1080px
+const TT_TIME_W      = 40;  // left time-label column width
+const TT_STAGE_W     = 82;  // each stage column width
+const TT_HEADER_H    = 46;  // sticky stage-name header height
 
 function TimetableTab({
   memberId,
   members,
   picks,
-  onToggle,
   onArtistTap,
   dayLabels,
 }: {
@@ -853,53 +850,49 @@ function TimetableTab({
   const dayArtists = ARTISTS.filter(
     (a) => a.day === activeDay && a.stage && a.startTime && a.endTime
   );
-
   const visibleArtists = myOnly
     ? dayArtists.filter((a) => myPickSet.has(a.id))
     : dayArtists;
 
-  // Stages that have at least one artist visible today
   const activeStages = STAGES.filter((s) =>
     visibleArtists.some((a) => a.stage === s)
   );
 
-  const totalWidth = SCHED_RANGE * PX_PER_MIN;
-
-  // Hour ruler marks
   const hourMarks: number[] = [];
   for (let h = 13; h <= 25; h++) hourMarks.push(h);
 
-  function xPos(time: string): number {
-    return (timeToMinutes(time) - SCHED_START) * PX_PER_MIN;
+  function yPos(time: string): number {
+    return (timeToMinutes(time) - TT_SCHED_START) * TT_PX_PER_MIN;
   }
-  function blockWidth(start: string, end: string): number {
-    return Math.max((timeToMinutes(end) - timeToMinutes(start)) * PX_PER_MIN, 32);
+  function blkH(start: string, end: string): number {
+    return Math.max((timeToMinutes(end) - timeToMinutes(start)) * TT_PX_PER_MIN, 36);
   }
   function formatHour(h: number): string {
     if (h === 24) return "12a";
     if (h === 25) return "1a";
-    if (h >= 13) return `${h - 12}p`;
-    return `${h}`;
+    return `${h - 12}p`;
+  }
+
+  // Stage label abbreviation
+  function stageLabel(s: string): string {
+    return s.replace(" Stage", "").replace("Outdoor Theater", "Outdoor\nTheater");
   }
 
   const myPickCount = myPickSet.size;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+
       {/* Day tabs */}
       <div style={{ display: "flex", padding: "12px 16px 0", gap: 8, background: "#0a0a0f", flexShrink: 0 }}>
         {days.map((d) => (
-          <button
-            key={d}
-            onClick={() => setActiveDay(d)}
-            style={{
-              flex: 1, padding: "8px 0", borderRadius: 12, border: "none",
-              background: activeDay === d ? dayGradient(d) : "rgba(255,255,255,0.06)",
-              color: activeDay === d ? "#fff" : "rgba(240,240,245,0.5)",
-              fontSize: 12, fontWeight: 700, cursor: "pointer",
-              textTransform: "uppercase", letterSpacing: 0.5,
-            }}
-          >
+          <button key={d} onClick={() => setActiveDay(d)} style={{
+            flex: 1, padding: "8px 0", borderRadius: 12, border: "none",
+            background: activeDay === d ? dayGradient(d) : "rgba(255,255,255,0.06)",
+            color: activeDay === d ? "#fff" : "rgba(240,240,245,0.5)",
+            fontSize: 12, fontWeight: 700, cursor: "pointer",
+            textTransform: "uppercase", letterSpacing: 0.5,
+          }}>
             {dayLabels[d].split(" ")[0]}
             <br />
             <span style={{ fontSize: 10, fontWeight: 500 }}>
@@ -911,192 +904,175 @@ function TimetableTab({
 
       {/* Toggle: All / My Schedule */}
       <div style={{ display: "flex", padding: "10px 16px 8px", gap: 8, background: "#0a0a0f", flexShrink: 0, alignItems: "center" }}>
-        <button
-          onClick={() => setMyOnly(false)}
-          style={{
+        {[false, true].map((v) => (
+          <button key={String(v)} onClick={() => setMyOnly(v)} style={{
             padding: "6px 14px", borderRadius: 999, border: "none", cursor: "pointer",
-            background: !myOnly ? "rgba(247,37,133,0.2)" : "rgba(255,255,255,0.06)",
-            color: !myOnly ? "#f72585" : "rgba(240,240,245,0.5)",
-            fontSize: 12, fontWeight: 700,
-          }}
-        >
-          All artists
-        </button>
-        <button
-          onClick={() => setMyOnly(true)}
-          style={{
-            padding: "6px 14px", borderRadius: 999, border: "none", cursor: "pointer",
-            background: myOnly ? "rgba(247,37,133,0.2)" : "rgba(255,255,255,0.06)",
-            color: myOnly ? "#f72585" : "rgba(240,240,245,0.5)",
+            background: myOnly === v ? "rgba(247,37,133,0.2)" : "rgba(255,255,255,0.06)",
+            color: myOnly === v ? "#f72585" : "rgba(240,240,245,0.5)",
             fontSize: 12, fontWeight: 700,
             display: "flex", alignItems: "center", gap: 6,
-          }}
-        >
-          My schedule
-          {myPickCount > 0 && (
-            <span style={{
-              background: "#f72585", color: "#fff", borderRadius: 999,
-              fontSize: 10, fontWeight: 700, minWidth: 16, height: 16,
-              display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 4px",
-            }}>
-              {myPickCount}
-            </span>
-          )}
-        </button>
-        <span style={{ marginLeft: "auto", fontSize: 11, color: "rgba(240,240,245,0.3)" }}>← scroll →</span>
+          }}>
+            {v ? "My schedule" : "All artists"}
+            {v && myPickCount > 0 && (
+              <span style={{
+                background: "#f72585", color: "#fff", borderRadius: 999,
+                fontSize: 10, fontWeight: 700, minWidth: 16, height: 16,
+                display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 4px",
+              }}>{myPickCount}</span>
+            )}
+          </button>
+        ))}
       </div>
 
-      {/* Grid */}
-      <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
-        <div style={{ display: "flex", minHeight: "100%" }}>
-          {/* Fixed stage labels */}
-          <div style={{ width: STAGE_LABEL_W, flexShrink: 0, paddingTop: RULER_H }}>
-            {activeStages.map((stage) => (
-              <div
-                key={stage}
-                style={{
-                  height: ROW_H,
-                  display: "flex",
-                  alignItems: "center",
-                  paddingRight: 6,
-                  borderBottom: "1px solid rgba(255,255,255,0.04)",
-                }}
-              >
-                <span style={{
-                  fontSize: 9,
-                  fontWeight: 700,
-                  color: STAGE_COLORS[stage] ?? "rgba(240,240,245,0.5)",
-                  textTransform: "uppercase",
-                  letterSpacing: 0.3,
-                  lineHeight: 1.2,
-                  paddingLeft: 8,
+      {/* Empty state */}
+      {activeStages.length === 0 && myOnly && (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: 32, textAlign: "center" }}>
+          <div style={{ fontSize: 14, color: "rgba(240,240,245,0.45)" }}>No picks on {dayLabels[activeDay]} yet</div>
+          <div style={{ fontSize: 13, color: "rgba(240,240,245,0.3)" }}>Heart artists in the Lineup tab</div>
+        </div>
+      )}
+
+      {/* Grid: single container scrolls both axes */}
+      {activeStages.length > 0 && (
+        <div style={{ flex: 1, overflow: "auto", WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"] }}>
+          <div style={{ minWidth: TT_TIME_W + activeStages.length * TT_STAGE_W, display: "flex", flexDirection: "column" }}>
+
+            {/* Sticky stage-name header row */}
+            <div style={{
+              position: "sticky", top: 0, zIndex: 20,
+              display: "flex", background: "#0a0a0f",
+              borderBottom: "1px solid rgba(255,255,255,0.1)",
+            }}>
+              {/* Corner cell — sticky left too */}
+              <div style={{
+                width: TT_TIME_W, flexShrink: 0, height: TT_HEADER_H,
+                position: "sticky", left: 0, zIndex: 22, background: "#0a0a0f",
+              }} />
+              {/* Stage name cells */}
+              {activeStages.map((stage) => (
+                <div key={stage} style={{
+                  width: TT_STAGE_W, flexShrink: 0, height: TT_HEADER_H,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  borderLeft: "1px solid rgba(255,255,255,0.05)",
+                  padding: "0 4px",
                 }}>
-                  {stage.replace(" Stage", "").replace("Outdoor ", "OT\n")}
-                </span>
-              </div>
-            ))}
-          </div>
+                  <span style={{
+                    fontSize: 9, fontWeight: 800,
+                    color: STAGE_COLORS[stage] ?? "rgba(240,240,245,0.5)",
+                    textTransform: "uppercase", letterSpacing: 0.5,
+                    textAlign: "center", lineHeight: 1.35,
+                    whiteSpace: "pre-line",
+                  }}>
+                    {stageLabel(stage)}
+                  </span>
+                </div>
+              ))}
+            </div>
 
-          {/* Scrollable timeline */}
-          <div style={{ flex: 1, overflowX: "auto", overflowY: "hidden", paddingBottom: 100 }}>
-            <div style={{ width: totalWidth, position: "relative" }}>
-              {/* Hour ruler */}
-              <div style={{ height: RULER_H, position: "relative", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                {hourMarks.map((h) => {
-                  const x = (h * 60 - SCHED_START) * PX_PER_MIN;
-                  if (x < 0 || x > totalWidth) return null;
-                  return (
-                    <div
-                      key={h}
-                      style={{
-                        position: "absolute",
-                        left: x,
-                        top: 0,
-                        height: "100%",
-                        display: "flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      <span style={{ fontSize: 10, color: "rgba(240,240,245,0.35)", fontWeight: 600, paddingLeft: 3 }}>
-                        {formatHour(h)}
-                      </span>
-                    </div>
-                  );
-                })}
+            {/* Body: time labels + stage columns */}
+            <div style={{ display: "flex", height: TT_TOTAL_H + 110, position: "relative" }}>
+
+              {/* Sticky-left time labels */}
+              <div style={{
+                width: TT_TIME_W, flexShrink: 0,
+                position: "sticky", left: 0, zIndex: 10,
+                background: "#0a0a0f",
+              }}>
+                {hourMarks.map((h) => (
+                  <div key={h} style={{
+                    position: "absolute",
+                    top: (h * 60 - TT_SCHED_START) * TT_PX_PER_MIN - 7,
+                    right: 6, left: 0,
+                    textAlign: "right",
+                    fontSize: 10, fontWeight: 600,
+                    color: "rgba(240,240,245,0.3)",
+                    whiteSpace: "nowrap",
+                  }}>
+                    {formatHour(h)}
+                  </div>
+                ))}
               </div>
 
-              {/* Stage rows */}
+              {/* Stage columns */}
               {activeStages.map((stage) => {
                 const stageArtists = visibleArtists.filter((a) => a.stage === stage);
+                const stageColor = STAGE_COLORS[stage] ?? "#f72585";
                 return (
-                  <div
-                    key={stage}
-                    style={{
-                      height: ROW_H,
-                      position: "relative",
-                      borderBottom: "1px solid rgba(255,255,255,0.04)",
-                    }}
-                  >
+                  <div key={stage} style={{
+                    width: TT_STAGE_W, flexShrink: 0,
+                    position: "relative",
+                    borderLeft: "1px solid rgba(255,255,255,0.04)",
+                  }}>
                     {/* Hour grid lines */}
-                    {hourMarks.map((h) => {
-                      const x = (h * 60 - SCHED_START) * PX_PER_MIN;
-                      if (x < 0 || x > totalWidth) return null;
-                      return (
-                        <div
-                          key={h}
-                          style={{
-                            position: "absolute",
-                            left: x,
-                            top: 0,
-                            width: 1,
-                            height: "100%",
-                            background: "rgba(255,255,255,0.04)",
-                          }}
-                        />
-                      );
-                    })}
+                    {hourMarks.map((h) => (
+                      <div key={h} style={{
+                        position: "absolute",
+                        top: (h * 60 - TT_SCHED_START) * TT_PX_PER_MIN,
+                        left: 0, right: 0, height: 1,
+                        background: h % 2 === 0
+                          ? "rgba(255,255,255,0.06)"
+                          : "rgba(255,255,255,0.03)",
+                      }} />
+                    ))}
 
                     {/* Artist blocks */}
                     {stageArtists.map((artist) => {
-                      const x = xPos(artist.startTime!);
-                      const w = blockWidth(artist.startTime!, artist.endTime!);
+                      const top    = yPos(artist.startTime!);
+                      const height = blkH(artist.startTime!, artist.endTime!);
                       const isPicked = myPickSet.has(artist.id);
-                      const crew = crewForArtist(artist.id);
-                      const stageColor = STAGE_COLORS[stage] ?? "#f72585";
-
+                      const crew   = crewForArtist(artist.id);
                       return (
                         <button
                           key={artist.id}
                           onClick={() => onArtistTap(artist)}
                           style={{
                             position: "absolute",
-                            left: x + 2,
-                            top: 5,
-                            width: w - 4,
-                            height: ROW_H - 10,
+                            top: top + 2, left: 3, right: 3,
+                            height: height - 4,
                             borderRadius: 8,
                             border: `1.5px solid ${isPicked ? "#f72585" : stageColor + "55"}`,
                             background: isPicked
-                              ? "rgba(247,37,133,0.25)"
-                              : `${stageColor}18`,
+                              ? "rgba(247,37,133,0.28)"
+                              : `${stageColor}1a`,
                             cursor: "pointer",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "flex-start",
-                            justifyContent: "center",
-                            padding: "0 5px",
-                            overflow: "hidden",
-                            textAlign: "left",
-                            gap: 1,
+                            display: "flex", flexDirection: "column",
+                            alignItems: "flex-start", justifyContent: "flex-start",
+                            padding: "5px 5px", overflow: "hidden",
+                            textAlign: "left", gap: 2,
                           }}
                         >
                           <span style={{
                             fontSize: 10,
                             fontWeight: isPicked ? 700 : 500,
-                            color: isPicked ? "#fff" : "rgba(240,240,245,0.8)",
-                            whiteSpace: "nowrap",
+                            color: isPicked ? "#fff" : "rgba(240,240,245,0.85)",
+                            lineHeight: 1.25,
                             overflow: "hidden",
-                            textOverflow: "ellipsis",
+                            display: "block",
+                            whiteSpace: height < 54 ? "nowrap" : "normal",
+                            textOverflow: height < 54 ? "ellipsis" : "clip",
                             width: "100%",
-                            lineHeight: 1.3,
                           }}>
                             {artist.name}
                           </span>
-                          {(isPicked || crew.length > 0) && (
-                            <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-                              {isPicked && (
-                                <span style={{ fontSize: 8, color: "#f72585", fontWeight: 800 }}>♥</span>
-                              )}
+                          {height > 48 && (
+                            <span style={{
+                              fontSize: 9,
+                              color: isPicked ? "rgba(255,255,255,0.65)" : "rgba(240,240,245,0.38)",
+                              lineHeight: 1.2,
+                            }}>
+                              {fmtTime(artist.startTime!)}
+                            </span>
+                          )}
+                          {(isPicked || crew.length > 0) && height > 42 && (
+                            <div style={{ display: "flex", alignItems: "center", gap: 2, marginTop: "auto" }}>
+                              {isPicked && <span style={{ fontSize: 8, color: "#f72585", fontWeight: 800 }}>♥</span>}
                               {crew.slice(0, 3).map((m) => (
-                                <div
-                                  key={m.id}
-                                  style={{
-                                    width: 12, height: 12, borderRadius: "50%",
-                                    background: m.color, flexShrink: 0,
-                                    border: "1px solid rgba(0,0,0,0.4)",
-                                    overflow: "hidden",
-                                  }}
-                                >
+                                <div key={m.id} style={{
+                                  width: 10, height: 10, borderRadius: "50%",
+                                  background: m.color, flexShrink: 0,
+                                  border: "1px solid rgba(0,0,0,0.4)",
+                                  overflow: "hidden",
+                                }}>
                                   {m.photo_url && (
                                     // eslint-disable-next-line @next/next/no-img-element
                                     <img src={m.photo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -1104,7 +1080,7 @@ function TimetableTab({
                                 </div>
                               ))}
                               {crew.length > 3 && (
-                                <span style={{ fontSize: 8, color: "rgba(240,240,245,0.5)", fontWeight: 600 }}>+{crew.length - 3}</span>
+                                <span style={{ fontSize: 8, color: "rgba(240,240,245,0.45)", fontWeight: 600 }}>+{crew.length - 3}</span>
                               )}
                             </div>
                           )}
@@ -1114,17 +1090,10 @@ function TimetableTab({
                   </div>
                 );
               })}
-
-              {activeStages.length === 0 && myOnly && (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 24px", textAlign: "center", gap: 10 }}>
-                  <div style={{ fontSize: 14, color: "rgba(240,240,245,0.45)" }}>No picks on {dayLabels[activeDay]} yet</div>
-                  <div style={{ fontSize: 13, color: "rgba(240,240,245,0.3)" }}>Heart artists in the Lineup tab</div>
-                </div>
-              )}
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
