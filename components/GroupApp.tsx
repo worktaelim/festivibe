@@ -27,9 +27,11 @@ import { supabase } from "@/lib/supabase";
 function Avatar({
   member,
   size = 28,
+  showHostBadge = false,
 }: {
   member: { name: string; photo_url: string; color: string; is_host?: boolean };
   size?: number;
+  showHostBadge?: boolean;
 }) {
   const initials = member.name
     .split(" ")
@@ -72,7 +74,7 @@ function Avatar({
       {initials}
     </div>
   );
-  if (!member.is_host) return inner;
+  if (!member.is_host || !showHostBadge) return inner;
   return (
     <div style={{ position: "relative", flexShrink: 0, width: size, height: size }}>
       {inner}
@@ -1300,7 +1302,7 @@ function MemberDetailSheet({ member, isHost, currentMemberId, onKick, onClose }:
         <div style={{ width: 36, height: 4, background: "rgba(28,20,16,0.2)", borderRadius: 2, margin: "8px auto 20px" }} />
 
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, marginBottom: 24 }}>
-          <Avatar member={member} size={80} />
+          <Avatar member={member} size={80} showHostBadge />
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 20, fontWeight: 800, fontFamily: "'Space Mono', monospace", color: "#1c1410", display: "flex", alignItems: "center", gap: 6, justifyContent: "center" }}>
               {member.name}
@@ -1389,7 +1391,7 @@ function GroupInfoSheet({ group, members, currentMemberId, isHost, onKick, onClo
                 onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(28,20,16,0.05)")}
                 onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
-                <Avatar member={m} size={40} />
+                <Avatar member={m} size={40} showHostBadge />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 15, fontWeight: 700, fontFamily: "'Space Mono', monospace", color: "#1c1410", display: "flex", alignItems: "center", gap: 6 }}>
                     {m.name}
