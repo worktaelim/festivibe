@@ -49,15 +49,15 @@ export async function createGroup(
   name: string,
   cover_url = "",
   website_url = ""
-): Promise<string> {
+): Promise<{ id: string; code: string }> {
   const code = generateCode();
   const { data, error } = await supabase
     .from("groups")
     .insert({ name, cover_url, website_url, code })
-    .select("code")
+    .select("id, code")
     .single();
   if (error) throw error;
-  return data.code;
+  return { id: data.id, code: data.code };
 }
 
 export async function getGroup(idOrCode: string): Promise<Group | null> {
