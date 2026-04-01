@@ -1441,10 +1441,12 @@ function EditProfileSheet({
   onClose,
 }: {
   member: Member;
-  onSave: (updates: { name: string; photo_url: string }) => Promise<void>;
+  onSave: (updates: { name: string; photo_url: string; phone: string }) => Promise<void>;
   onClose: () => void;
 }) {
+  const [editing, setEditing] = useState(false);
   const [name, setName] = useState(member.name);
+  const [phone, setPhone] = useState(member.phone);
   const [photoUrl, setPhotoUrl] = useState(member.photo_url);
   const [saving, setSaving] = useState(false);
   const [nameError, setNameError] = useState("");
@@ -1460,98 +1462,131 @@ function EditProfileSheet({
     if (!name.trim()) { setNameError("Name is required"); return; }
     setSaving(true);
     try {
-      await onSave({ name: name.trim(), photo_url: photoUrl });
-      // Keep global profile in sync
+      await onSave({ name: name.trim(), photo_url: photoUrl, phone: phone.trim() });
       try {
         const raw = localStorage.getItem("festivibe_user");
         const existing = raw ? JSON.parse(raw) : {};
-        localStorage.setItem("festivibe_user", JSON.stringify({ ...existing, name: name.trim(), photo_url: photoUrl }));
+        localStorage.setItem("festivibe_user", JSON.stringify({ ...existing, name: name.trim(), photo_url: photoUrl, phone: phone.trim() }));
       } catch { /* ignore */ }
-      onClose();
+      setEditing(false);
     } finally {
       setSaving(false);
     }
   }
+
+  const initials = member.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 
   return (
     <>
       <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 300 }} />
       <div style={{
         position: "fixed", bottom: 0, left: 0, right: 0,
-        background: "#13131a",
-        borderRadius: "24px 24px 0 0",
-        padding: "8px 20px max(28px, env(safe-area-inset-bottom))",
-        zIndex: 301,
-        boxShadow: "0 -8px 40px rgba(0,0,0,0.5)",
+        background: "#13131a", borderRadius: "24px 24px 0 0",
+        padding: "8px 20px max(32px, env(safe-area-inset-bottom))",
+        zIndex: 301, boxShadow: "0 -8px 40px rgba(0,0,0,0.5)",
+        overflowY: "auto", maxHeight: "90dvh",
       }}>
         <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.15)", borderRadius: 2, margin: "8px auto 20px" }} />
-        <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Edit profile</div>
 
-        {/* Photo — preset grid + upload */}
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(240,240,245,0.45)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.8 }}>
-            Pick your vibe
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 10 }}>
-            {PRESET_AVATARS.map((preset) => {
-              const selected = photoUrl === preset.src;
-              return (
-                <button
-                  key={preset.id}
-                  type="button"
-                  onClick={() => setPhotoUrl(selected ? "" : preset.src)}
-                  style={{
-                    position: "relative", borderRadius: 14, aspectRatio: "1",
-                    border: selected ? "2.5px solid #f72585" : "2px solid rgba(255,255,255,0.08)",
-                    background: selected ? "rgba(247,37,133,0.12)" : "rgba(255,255,255,0.04)",
-                    padding: 5, cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
-                  }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={preset.src} alt={preset.label} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                  {selected && (
-                    <div style={{ position: "absolute", top: 3, right: 3, width: 14, height: 14, borderRadius: "50%", background: "#f72585", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: "#fff", fontWeight: 800 }}>✓</div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-          <label style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "8px 12px", cursor: "pointer" }}>
-            <div style={{ width: 36, height: 36, borderRadius: "50%", overflow: "hidden", background: "rgba(247,37,133,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              {photoUrl && !PRESET_AVATARS.some((a) => a.src === photoUrl)
-                // eslint-disable-next-line @next/next/no-img-element
-                ? <img src={photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                : <CameraIcon size={20} />
-              }
+        {!editing ? (
+          /* ── View mode ── */
+          <>
+            {/* Big avatar */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, marginBottom: 28 }}>
+              <div style={{ width: 88, height: 88, borderRadius: "50%", overflow: "hidden", background: member.color, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "3px solid rgba(255,255,255,0.1)" }}>
+                {member.photo_url
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={member.photo_url} alt={member.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  : <span style={{ fontSize: 32, fontWeight: 700, color: "#fff" }}>{initials}</span>
+                }
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 20, fontWeight: 800 }}>{member.name}</div>
+                {member.phone && (
+                  <div style={{ fontSize: 14, color: "rgba(240,240,245,0.45)", marginTop: 4 }}>{member.phone}</div>
+                )}
+              </div>
             </div>
-            <span style={{ fontSize: 13, color: "#f72585", fontWeight: 600 }}>
-              {photoUrl && !PRESET_AVATARS.some((a) => a.src === photoUrl) ? "Custom photo" : "Upload your own"}
-            </span>
-            <input type="file" accept="image/*" onChange={handlePhoto} style={{ display: "none" }} />
-          </label>
-        </div>
 
-        <div style={{ marginBottom: 12 }}>
-          <input
-            placeholder="Your name"
-            value={name}
-            onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) setNameError(""); }}
-            style={{ ...inputStyle, borderColor: nameError ? "rgba(247,37,133,0.6)" : "rgba(255,255,255,0.1)" }}
-          />
-          {nameError && <div style={{ fontSize: 12, color: "#f72585", marginTop: 4, paddingLeft: 4 }}>{nameError}</div>}
-        </div>
+            <button onClick={() => setEditing(true)} style={primaryBtnStyle(false)}>
+              Edit profile
+            </button>
+            <button onClick={onClose} style={{ width: "100%", marginTop: 8, background: "none", border: "none", borderRadius: 14, color: "rgba(240,240,245,0.4)", fontSize: 15, fontWeight: 600, padding: "13px", cursor: "pointer" }}>
+              Close
+            </button>
+          </>
+        ) : (
+          /* ── Edit mode ── */
+          <>
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Edit profile</div>
 
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          style={primaryBtnStyle(saving)}
-        >
-          {saving ? "Saving..." : "Save changes"}
-        </button>
-        <button onClick={onClose} style={{ width: "100%", marginTop: 8, background: "none", border: "none", borderRadius: 14, color: "rgba(240,240,245,0.4)", fontSize: 15, fontWeight: 600, padding: "13px", cursor: "pointer" }}>
-          Cancel
-        </button>
+            {/* Photo */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(240,240,245,0.45)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.8 }}>
+                Photo
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 10 }}>
+                {PRESET_AVATARS.map((preset) => {
+                  const selected = photoUrl === preset.src;
+                  return (
+                    <button key={preset.id} type="button" onClick={() => setPhotoUrl(selected ? "" : preset.src)} style={{
+                      position: "relative", borderRadius: 14, aspectRatio: "1",
+                      border: selected ? "2.5px solid #f72585" : "2px solid rgba(255,255,255,0.08)",
+                      background: selected ? "rgba(247,37,133,0.12)" : "rgba(255,255,255,0.04)",
+                      padding: 5, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
+                    }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={preset.src} alt={preset.label} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                      {selected && <div style={{ position: "absolute", top: 3, right: 3, width: 14, height: 14, borderRadius: "50%", background: "#f72585", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: "#fff", fontWeight: 800 }}>✓</div>}
+                    </button>
+                  );
+                })}
+              </div>
+              <label style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "8px 12px", cursor: "pointer" }}>
+                <div style={{ width: 36, height: 36, borderRadius: "50%", overflow: "hidden", background: "rgba(247,37,133,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {photoUrl && !PRESET_AVATARS.some((a) => a.src === photoUrl)
+                    // eslint-disable-next-line @next/next/no-img-element
+                    ? <img src={photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    : <CameraIcon size={20} />}
+                </div>
+                <span style={{ fontSize: 13, color: "#f72585", fontWeight: 600 }}>
+                  {photoUrl && !PRESET_AVATARS.some((a) => a.src === photoUrl) ? "Custom photo" : "Upload your own"}
+                </span>
+                <input type="file" accept="image/*" onChange={handlePhoto} style={{ display: "none" }} />
+              </label>
+            </div>
+
+            {/* Name */}
+            <div style={{ marginBottom: 10 }}>
+              <input
+                placeholder="Your name"
+                value={name}
+                onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) setNameError(""); }}
+                style={{ ...inputStyle, borderColor: nameError ? "rgba(247,37,133,0.6)" : "rgba(255,255,255,0.1)" }}
+              />
+              {nameError && <div style={{ fontSize: 12, color: "#f72585", marginTop: 4, paddingLeft: 4 }}>{nameError}</div>}
+            </div>
+
+            {/* Phone */}
+            <div style={{ marginBottom: 12 }}>
+              <input
+                placeholder="Phone number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                type="tel"
+                style={inputStyle}
+              />
+            </div>
+
+            <button onClick={handleSave} disabled={saving} style={primaryBtnStyle(saving)}>
+              {saving ? "Saving..." : "Save changes"}
+            </button>
+            <button onClick={() => setEditing(false)} style={{ width: "100%", marginTop: 8, background: "none", border: "none", borderRadius: 14, color: "rgba(240,240,245,0.4)", fontSize: 15, fontWeight: 600, padding: "13px", cursor: "pointer" }}>
+              Cancel
+            </button>
+          </>
+        )}
       </div>
     </>
   );
@@ -1653,7 +1688,7 @@ export default function GroupApp({ groupId }: { groupId: string }) {
     });
   }
 
-  async function handleSaveProfile(updates: { name: string; photo_url: string }) {
+  async function handleSaveProfile(updates: { name: string; photo_url: string; phone: string }) {
     await updateMember(memberId!, updates);
     setMembers((prev) => prev.map((m) => m.id === memberId ? { ...m, ...updates } : m));
   }

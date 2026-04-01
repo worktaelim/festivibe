@@ -169,7 +169,7 @@ export async function togglePick(
 
 export async function updateMember(
   memberId: string,
-  updates: { name?: string; photo_url?: string }
+  updates: { name?: string; photo_url?: string; phone?: string }
 ): Promise<void> {
   const { error } = await supabase.from("members").update(updates).eq("id", memberId);
   if (error) throw error;
