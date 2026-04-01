@@ -13,9 +13,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" style={{ height: "100%" }}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-        <meta name="theme-color" content="#0a0a0f" />
+        <meta name="theme-color" content="#f0ebe0" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
       </head>
-      <body style={{ height: "100%", background: "#0a0a0f" }}>{children}</body>
+      <body style={{ height: "100%", background: "#f0ebe0" }}>{children}</body>
     </html>
   );
 }

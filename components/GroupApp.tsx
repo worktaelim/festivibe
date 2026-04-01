@@ -47,7 +47,7 @@ function Avatar({
         height: size,
         borderRadius: "50%",
         objectFit: "cover",
-        border: "2px solid #0a0a0f",
+        border: "2px solid #1c1410",
         flexShrink: 0,
       }}
     />
@@ -64,7 +64,7 @@ function Avatar({
         fontSize: size * 0.36,
         fontWeight: 700,
         color: "#fff",
-        border: "2px solid #0a0a0f",
+        border: "2px solid #1c1410",
         flexShrink: 0,
       }}
     >
@@ -96,13 +96,13 @@ function AvatarStack({
             width: 26,
             height: 26,
             borderRadius: "50%",
-            background: "rgba(255,255,255,0.12)",
+            background: "rgba(28,20,16,0.1)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             fontSize: 10,
-            color: "rgba(240,240,245,0.7)",
-            border: "2px solid #0a0a0f",
+            color: "rgba(28,20,16,0.7)",
+            border: "2px solid #1c1410",
             fontWeight: 600,
           }}
         >
@@ -178,7 +178,7 @@ function JoinForm({
     <div
       style={{
         minHeight: "100dvh",
-        background: "#0a0a0f",
+        background: "#f0ebe0",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -190,10 +190,10 @@ function JoinForm({
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: 32 }}>
         <div style={{ marginBottom: 8 }}><CactusIcon size={48} /></div>
-        <div className="gradient-text" style={{ fontSize: 28, fontWeight: 800, letterSpacing: -1 }}>
+        <div style={{ fontSize: 36, fontFamily: "'Permanent Marker', cursive", color: "#1c1410", letterSpacing: 0 }}>
           Festivibe
         </div>
-        <div style={{ color: "rgba(240,240,245,0.5)", fontSize: 14, marginTop: 6 }}>
+        <div style={{ color: "rgba(28,20,16,0.55)", fontSize: 13, marginTop: 6, fontFamily: "'Space Mono', monospace" }}>
           Coachella 2026 · Week {group.week ?? 2}
         </div>
       </div>
@@ -201,26 +201,27 @@ function JoinForm({
       {/* Card */}
       <div
         style={{
-          background: "#13131a",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 24,
+          background: "#faf7ed",
+          border: "2px solid #1c1410",
+          borderRadius: 10,
           padding: "28px 24px",
           width: "100%",
           maxWidth: 380,
+          boxShadow: "3px 3px 0 #1c1410",
         }}
       >
         <div style={{ marginBottom: 24, textAlign: "center" }}>
-          <div style={{ fontSize: 13, color: "rgba(240,240,245,0.4)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
+          <div style={{ fontSize: 12, color: "rgba(28,20,16,0.5)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6, fontFamily: "'Space Mono', monospace", fontWeight: 700 }}>
             you&apos;re joining
           </div>
-          <div style={{ fontSize: 22, fontWeight: 700 }}>{group.name}</div>
+          <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "'Space Mono', monospace", color: "#1c1410" }}>{group.name}</div>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
           {/* Avatar section */}
           <div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(240,240,245,0.45)", marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.8 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(28,20,16,0.5)", marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.8, fontFamily: "'Space Mono', monospace" }}>
               Pick your vibe
             </div>
 
@@ -235,11 +236,11 @@ function JoinForm({
                     onClick={() => setPhotoUrl(selected ? "" : preset.src)}
                     style={{
                       position: "relative",
-                      borderRadius: 16,
+                      borderRadius: 10,
                       border: selected
-                        ? "2.5px solid #f72585"
-                        : "2px solid rgba(255,255,255,0.08)",
-                      background: selected ? "rgba(247,37,133,0.15)" : "#f8d377",
+                        ? "2.5px solid #e03030"
+                        : "2px solid #1c1410",
+                      background: "#f8d377",
                       padding: 6,
                       cursor: "pointer",
                       aspectRatio: "1",
@@ -247,7 +248,7 @@ function JoinForm({
                       alignItems: "center",
                       justifyContent: "center",
                       overflow: "hidden",
-                      transition: "border-color 0.15s, background 0.15s",
+                      boxShadow: selected ? "2px 2px 0 #1c1410" : "1px 1px 0 #1c1410",
                     }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -260,7 +261,7 @@ function JoinForm({
                       <div style={{
                         position: "absolute", top: 4, right: 4,
                         width: 16, height: 16, borderRadius: "50%",
-                        background: "#f72585",
+                        background: "#e03030",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         fontSize: 10, color: "#fff", fontWeight: 800,
                       }}>
@@ -275,14 +276,15 @@ function JoinForm({
             {/* Upload own photo */}
             <label style={{
               display: "flex", alignItems: "center", gap: 12,
-              background: "rgba(255,255,255,0.04)",
-              border: `1.5px solid ${!isPreset && photoUrl ? "rgba(247,37,133,0.4)" : "rgba(255,255,255,0.08)"}`,
-              borderRadius: 14, padding: "10px 14px",
+              background: "#faf7ed",
+              border: `2px solid ${!isPreset && photoUrl ? "#e03030" : "#1c1410"}`,
+              borderRadius: 10, padding: "10px 14px",
               cursor: "pointer",
+              boxShadow: "2px 2px 0 #1c1410",
             }}>
               <div style={{
                 width: 40, height: 40, borderRadius: "50%",
-                background: !isPreset && photoUrl ? "transparent" : "rgba(247,37,133,0.1)",
+                background: !isPreset && photoUrl ? "transparent" : "rgba(224,48,48,0.1)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 overflow: "hidden", flexShrink: 0,
               }}>
@@ -293,13 +295,13 @@ function JoinForm({
                 }
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: !isPreset && photoUrl ? "#f72585" : "rgba(240,240,245,0.7)" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: !isPreset && photoUrl ? "#e03030" : "rgba(28,20,16,0.7)", fontFamily: "'Space Mono', monospace" }}>
                   {!isPreset && photoUrl ? "Custom photo selected" : "Upload your own photo"}
                 </div>
-                <div style={{ fontSize: 11, color: "rgba(240,240,245,0.35)", marginTop: 1 }}>optional</div>
+                <div style={{ fontSize: 11, color: "rgba(28,20,16,0.4)", marginTop: 1, fontFamily: "'Space Mono', monospace" }}>optional</div>
               </div>
               {!isPreset && photoUrl && (
-                <div style={{ marginLeft: "auto", width: 20, height: 20, borderRadius: "50%", background: "#f72585", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#fff", fontWeight: 800 }}>
+                <div style={{ marginLeft: "auto", width: 20, height: 20, borderRadius: "50%", background: "#e03030", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#fff", fontWeight: 800 }}>
                   ✓
                 </div>
               )}
@@ -313,10 +315,10 @@ function JoinForm({
               placeholder="Your name *"
               value={name}
               onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) setNameError(""); }}
-              style={{ ...inputStyle, borderColor: nameError ? "rgba(247,37,133,0.6)" : "rgba(255,255,255,0.1)" }}
+              style={{ ...inputStyle, borderColor: nameError ? "#e03030" : "#1c1410" }}
               autoFocus
             />
-            {nameError && <div style={{ fontSize: 12, color: "#f72585", marginTop: 4, paddingLeft: 4 }}>{nameError}</div>}
+            {nameError && <div style={{ fontSize: 12, color: "#e03030", marginTop: 4, paddingLeft: 4, fontFamily: "'Space Mono', monospace" }}>{nameError}</div>}
           </div>
 
           {/* Phone */}
@@ -326,9 +328,9 @@ function JoinForm({
               value={phone}
               onChange={(e) => { setPhone(e.target.value); if (e.target.value.trim()) setPhoneError(""); }}
               type="tel"
-              style={{ ...inputStyle, borderColor: phoneError ? "rgba(247,37,133,0.6)" : "rgba(255,255,255,0.1)" }}
+              style={{ ...inputStyle, borderColor: phoneError ? "#e03030" : "#1c1410" }}
             />
-            {phoneError && <div style={{ fontSize: 12, color: "#f72585", marginTop: 4, paddingLeft: 4 }}>{phoneError}</div>}
+            {phoneError && <div style={{ fontSize: 12, color: "#e03030", marginTop: 4, paddingLeft: 4, fontFamily: "'Space Mono', monospace" }}>{phoneError}</div>}
           </div>
 
           <button
@@ -392,7 +394,7 @@ function LineupTab({
           display: "flex",
           padding: "12px 16px 0",
           gap: 8,
-          background: "#0a0a0f",
+          background: "#f0ebe0",
         }}
       >
         {days.map((d) => (
@@ -402,17 +404,19 @@ function LineupTab({
             style={{
               flex: 1,
               padding: "8px 0",
-              borderRadius: 12,
-              border: "none",
+              borderRadius: 10,
+              border: "2px solid #1c1410",
               background: activeDay === d
                 ? dayGradient(d)
-                : "rgba(255,255,255,0.06)",
-              color: activeDay === d ? "#fff" : "rgba(240,240,245,0.5)",
+                : "#faf7ed",
+              color: activeDay === d ? "#fff" : "rgba(28,20,16,0.6)",
               fontSize: 12,
               fontWeight: 700,
               cursor: "pointer",
               textTransform: "uppercase",
               letterSpacing: 0.5,
+              boxShadow: activeDay === d ? "2px 2px 0 #1c1410" : "1px 1px 0 #1c1410",
+              fontFamily: "'Space Mono', monospace",
             }}
           >
             {dayLabels[d].split(" ")[0]}
@@ -452,25 +456,25 @@ function LineupTab({
                 alignItems: "center",
                 justifyContent: "space-between",
                 padding: "12px 0",
-                borderBottom: "1px solid rgba(255,255,255,0.05)",
+                borderBottom: "1px solid rgba(28,20,16,0.1)",
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div
                   onClick={() => onArtistTap(artist)}
-                  style={{ fontSize: 15, fontWeight: 600, marginBottom: 2, lineHeight: 1.2, cursor: "pointer" }}
+                  style={{ fontSize: 15, fontWeight: 700, marginBottom: 2, lineHeight: 1.2, cursor: "pointer", color: "#1c1410", fontFamily: "'Space Mono', monospace" }}
                 >
                   {artist.name}
                 </div>
                 {(artist.stage || artist.startTime) && (
-                  <div style={{ fontSize: 11, color: "rgba(240,240,245,0.38)", marginBottom: 3 }}>
+                  <div style={{ fontSize: 11, color: "rgba(28,20,16,0.4)", marginBottom: 3, fontFamily: "'Space Mono', monospace" }}>
                     {[artist.stage, artist.startTime && artist.endTime ? `${fmtTime(artist.startTime)}–${fmtTime(artist.endTime)}` : null].filter(Boolean).join(" · ")}
                   </div>
                 )}
                 {interested.length > 0 && (
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <AvatarStack members={interested} />
-                    <span style={{ fontSize: 12, color: "rgba(240,240,245,0.4)" }}>
+                    <span style={{ fontSize: 12, color: "rgba(28,20,16,0.5)", fontFamily: "'Space Mono', monospace" }}>
                       {interested.length === 1
                         ? `${interested[0].name.split(" ")[0]} is in`
                         : `${interested.length} going`}
@@ -484,17 +488,17 @@ function LineupTab({
                   width: 40,
                   height: 40,
                   borderRadius: "50%",
-                  border: "none",
+                  border: "2px solid #1c1410",
                   background: isPicked
-                    ? "rgba(247,37,133,0.2)"
-                    : "rgba(255,255,255,0.06)",
+                    ? "rgba(224,48,48,0.15)"
+                    : "#faf7ed",
                   cursor: "pointer",
                   fontSize: 18,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   flexShrink: 0,
-                  transition: "all 0.15s",
+                  boxShadow: "1px 1px 0 #1c1410",
                 }}
               >
                 <HeartIcon size={20} filled={isPicked} />
@@ -548,13 +552,13 @@ function PicksTab({
           justifyContent: "center",
           padding: 32,
           textAlign: "center",
-          color: "rgba(240,240,245,0.45)",
+          color: "rgba(28,20,16,0.5)",
           gap: 12,
         }}
       >
         <HeartEmptyLarge size={56} />
-        <div style={{ fontSize: 16, fontWeight: 600 }}>No picks yet</div>
-        <div style={{ fontSize: 14 }}>Tap the heart on artists in the Lineup tab</div>
+        <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Space Mono', monospace", color: "#1c1410" }}>No picks yet</div>
+        <div style={{ fontSize: 14, fontFamily: "'Space Mono', monospace" }}>Tap the heart on artists in the Lineup tab</div>
       </div>
     );
   }
@@ -574,6 +578,7 @@ function PicksTab({
                 letterSpacing: 1.5,
                 color: dayColor(day),
                 marginBottom: 10,
+                fontFamily: "'Space Mono', monospace",
               }}
             >
               {dayLabels[day]}
@@ -584,27 +589,28 @@ function PicksTab({
                 <div
                   key={artist.id}
                   style={{
-                    background: "#13131a",
-                    border: "1px solid rgba(255,255,255,0.07)",
-                    borderRadius: 16,
+                    background: "#faf7ed",
+                    border: "2px solid #1c1410",
+                    borderRadius: 10,
                     padding: "14px 16px",
                     marginBottom: 8,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
+                    boxShadow: "2px 2px 0 #1c1410",
                   }}
                 >
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 600 }}>{artist.name}</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, fontFamily: "'Space Mono', monospace", color: "#1c1410" }}>{artist.name}</div>
                     {(artist.stage || artist.startTime) && (
-                      <div style={{ fontSize: 11, color: "rgba(240,240,245,0.38)", marginTop: 2 }}>
+                      <div style={{ fontSize: 11, color: "rgba(28,20,16,0.4)", marginTop: 2, fontFamily: "'Space Mono', monospace" }}>
                         {[artist.stage, artist.startTime && artist.endTime ? `${fmtTime(artist.startTime)}–${fmtTime(artist.endTime)}` : null].filter(Boolean).join(" · ")}
                       </div>
                     )}
                     {others.length > 0 && (
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6 }}>
                         <AvatarStack members={others} maxShow={3} />
-                        <span style={{ fontSize: 12, color: "rgba(240,240,245,0.4)" }}>
+                        <span style={{ fontSize: 12, color: "rgba(28,20,16,0.5)", fontFamily: "'Space Mono', monospace" }}>
                           also going
                         </span>
                       </div>
@@ -615,7 +621,7 @@ function PicksTab({
                     style={{
                       background: "none",
                       border: "none",
-                      color: "rgba(240,240,245,0.3)",
+                      color: "rgba(28,20,16,0.4)",
                       fontSize: 20,
                       cursor: "pointer",
                     }}
@@ -688,8 +694,8 @@ function CrewTab({
         }}
       >
         <CrewIcon size={56} />
-        <div style={{ fontSize: 16, fontWeight: 600 }}>No matches yet</div>
-        <div style={{ fontSize: 14, color: "rgba(240,240,245,0.45)" }}>
+        <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Space Mono', monospace", color: "#1c1410" }}>No matches yet</div>
+        <div style={{ fontSize: 14, color: "rgba(28,20,16,0.5)", fontFamily: "'Space Mono', monospace" }}>
           Overlaps appear when 2+ crew members pick the same artist
         </div>
       </div>
@@ -698,7 +704,7 @@ function CrewTab({
 
   return (
     <div style={{ flex: 1, overflowY: "auto", padding: "16px 16px 100px" }}>
-      <div style={{ fontSize: 13, color: "rgba(240,240,245,0.45)", marginBottom: 16 }}>
+      <div style={{ fontSize: 13, color: "rgba(28,20,16,0.5)", marginBottom: 16, fontFamily: "'Space Mono', monospace" }}>
         Artists your crew wants to see together
       </div>
       {shared.map(([artistId, interested]) => {
@@ -708,16 +714,17 @@ function CrewTab({
           <div
             key={artistId}
             style={{
-              background: iMine ? "rgba(247,37,133,0.08)" : "#13131a",
-              border: `1px solid ${iMine ? "rgba(247,37,133,0.25)" : "rgba(255,255,255,0.07)"}`,
-              borderRadius: 18,
+              background: iMine ? "rgba(224,48,48,0.06)" : "#faf7ed",
+              border: `2px solid ${iMine ? "#e03030" : "#1c1410"}`,
+              borderRadius: 10,
               padding: "16px",
               marginBottom: 10,
+              boxShadow: "2px 2px 0 #1c1410",
             }}
           >
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4, fontFamily: "'Space Mono', monospace", color: "#1c1410" }}>
                   {artistName(artistId)}
                 </div>
                 {day && (
@@ -725,13 +732,14 @@ function CrewTab({
                     style={{
                       display: "inline-block",
                       fontSize: 11,
-                      fontWeight: 600,
+                      fontWeight: 700,
                       padding: "2px 8px",
                       borderRadius: 999,
                       background: dayBgColor(day),
                       color: dayColor(day),
                       textTransform: "uppercase",
                       letterSpacing: 0.5,
+                      fontFamily: "'Space Mono', monospace",
                     }}
                   >
                     {dayLabels[day]}
@@ -741,11 +749,14 @@ function CrewTab({
               <div
                 style={{
                   background: dayGradient(day ?? "fri"),
-                  borderRadius: 12,
+                  borderRadius: 10,
                   padding: "4px 10px",
                   fontSize: 13,
                   fontWeight: 700,
                   color: "#fff",
+                  border: "2px solid #1c1410",
+                  boxShadow: "1px 1px 0 #1c1410",
+                  fontFamily: "'Space Mono', monospace",
                 }}
               >
                 {interested.length}
@@ -766,19 +777,21 @@ function CrewTab({
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <Avatar member={m} size={32} />
-                    <span style={{ fontSize: 14, fontWeight: 500 }}>{m.name}</span>
+                    <span style={{ fontSize: 14, fontWeight: 500, fontFamily: "'Space Mono', monospace", color: "#1c1410" }}>{m.name}</span>
                   </div>
                   {m.phone && m.id !== currentMemberId && (
                     <a
                       href={`sms:${m.phone}`}
                       style={{
                         fontSize: 12,
-                        color: "var(--accent-cyan)",
+                        color: "#2a5c28",
                         textDecoration: "none",
-                        background: "rgba(76,201,240,0.1)",
+                        background: "rgba(42,92,40,0.1)",
                         padding: "4px 10px",
                         borderRadius: 999,
-                        fontWeight: 600,
+                        fontWeight: 700,
+                        border: "1px solid #2a5c28",
+                        fontFamily: "'Space Mono', monospace",
                       }}
                     >
                       Text
@@ -898,14 +911,16 @@ function TimetableTab({
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
 
       {/* Day tabs */}
-      <div style={{ display: "flex", padding: "12px 16px 0", gap: 8, background: "#0a0a0f", flexShrink: 0 }}>
+      <div style={{ display: "flex", padding: "12px 16px 0", gap: 8, background: "#f0ebe0", flexShrink: 0 }}>
         {days.map((d) => (
           <button key={d} onClick={() => setActiveDay(d)} style={{
-            flex: 1, padding: "8px 0", borderRadius: 12, border: "none",
-            background: activeDay === d ? dayGradient(d) : "rgba(255,255,255,0.06)",
-            color: activeDay === d ? "#fff" : "rgba(240,240,245,0.5)",
+            flex: 1, padding: "8px 0", borderRadius: 10, border: "2px solid #1c1410",
+            background: activeDay === d ? dayGradient(d) : "#faf7ed",
+            color: activeDay === d ? "#fff" : "rgba(28,20,16,0.6)",
             fontSize: 12, fontWeight: 700, cursor: "pointer",
             textTransform: "uppercase", letterSpacing: 0.5,
+            boxShadow: activeDay === d ? "2px 2px 0 #1c1410" : "1px 1px 0 #1c1410",
+            fontFamily: "'Space Mono', monospace",
           }}>
             {dayLabels[d].split(" ")[0]}
             <br />
@@ -917,19 +932,21 @@ function TimetableTab({
       </div>
 
       {/* Toggle: All / My Schedule */}
-      <div style={{ display: "flex", padding: "10px 16px 8px", gap: 8, background: "#0a0a0f", flexShrink: 0, alignItems: "center" }}>
+      <div style={{ display: "flex", padding: "10px 16px 8px", gap: 8, background: "#f0ebe0", flexShrink: 0, alignItems: "center" }}>
         {[false, true].map((v) => (
           <button key={String(v)} onClick={() => setMyOnly(v)} style={{
-            padding: "6px 14px", borderRadius: 999, border: "none", cursor: "pointer",
-            background: myOnly === v ? "rgba(247,37,133,0.2)" : "rgba(255,255,255,0.06)",
-            color: myOnly === v ? "#f72585" : "rgba(240,240,245,0.5)",
+            padding: "6px 14px", borderRadius: 999, border: "2px solid #1c1410", cursor: "pointer",
+            background: myOnly === v ? "#e03030" : "#faf7ed",
+            color: myOnly === v ? "#fff" : "rgba(28,20,16,0.6)",
             fontSize: 12, fontWeight: 700,
             display: "flex", alignItems: "center", gap: 6,
+            boxShadow: myOnly === v ? "2px 2px 0 #1c1410" : "1px 1px 0 #1c1410",
+            fontFamily: "'Space Mono', monospace",
           }}>
             {v ? "My schedule" : "All artists"}
             {v && myPickCount > 0 && (
               <span style={{
-                background: "#f72585", color: "#fff", borderRadius: 999,
+                background: "#fff", color: "#e03030", borderRadius: 999,
                 fontSize: 10, fontWeight: 700, minWidth: 16, height: 16,
                 display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 4px",
               }}>{myPickCount}</span>
@@ -941,8 +958,8 @@ function TimetableTab({
       {/* Empty state */}
       {activeStages.length === 0 && myOnly && (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: 32, textAlign: "center" }}>
-          <div style={{ fontSize: 14, color: "rgba(240,240,245,0.45)" }}>No picks on {dayLabels[activeDay]} yet</div>
-          <div style={{ fontSize: 13, color: "rgba(240,240,245,0.3)" }}>Heart artists in the Lineup tab</div>
+          <div style={{ fontSize: 14, color: "rgba(28,20,16,0.5)", fontFamily: "'Space Mono', monospace" }}>No picks on {dayLabels[activeDay]} yet</div>
+          <div style={{ fontSize: 13, color: "rgba(28,20,16,0.35)", fontFamily: "'Space Mono', monospace" }}>Heart artists in the Lineup tab</div>
         </div>
       )}
 
@@ -954,28 +971,29 @@ function TimetableTab({
             {/* Sticky stage-name header row */}
             <div style={{
               position: "sticky", top: 0, zIndex: 20,
-              display: "flex", background: "#0a0a0f",
-              borderBottom: "1px solid rgba(255,255,255,0.1)",
+              display: "flex", background: "#f0ebe0",
+              borderBottom: "2px solid #1c1410",
             }}>
               {/* Corner cell — sticky left too */}
               <div style={{
                 width: TT_TIME_W, flexShrink: 0, height: TT_HEADER_H,
-                position: "sticky", left: 0, zIndex: 22, background: "#0a0a0f",
+                position: "sticky", left: 0, zIndex: 22, background: "#f0ebe0",
               }} />
               {/* Stage name cells */}
               {activeStages.map((stage) => (
                 <div key={stage} style={{
                   width: stageW, flexShrink: 0, height: TT_HEADER_H,
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  borderLeft: "1px solid rgba(255,255,255,0.05)",
+                  borderLeft: "1px solid rgba(28,20,16,0.12)",
                   padding: "0 4px",
                 }}>
                   <span style={{
                     fontSize: 9, fontWeight: 800,
-                    color: STAGE_COLORS[stage] ?? "rgba(240,240,245,0.5)",
+                    color: STAGE_COLORS[stage] ?? "rgba(28,20,16,0.5)",
                     textTransform: "uppercase", letterSpacing: 0.5,
                     textAlign: "center", lineHeight: 1.35,
                     whiteSpace: "pre-line",
+                    fontFamily: "'Space Mono', monospace",
                   }}>
                     {stageLabel(stage)}
                   </span>
@@ -990,7 +1008,7 @@ function TimetableTab({
               <div style={{
                 width: TT_TIME_W, flexShrink: 0,
                 position: "sticky", left: 0, zIndex: 10,
-                background: "#0a0a0f",
+                background: "#f0ebe0",
               }}>
                 {hourMarks.map((h) => (
                   <div key={h} style={{
@@ -999,8 +1017,9 @@ function TimetableTab({
                     right: 6, left: 0,
                     textAlign: "right",
                     fontSize: 10, fontWeight: 600,
-                    color: "rgba(240,240,245,0.3)",
+                    color: "rgba(28,20,16,0.35)",
                     whiteSpace: "nowrap",
+                    fontFamily: "'Space Mono', monospace",
                   }}>
                     {formatHour(h)}
                   </div>
@@ -1010,12 +1029,12 @@ function TimetableTab({
               {/* Stage columns */}
               {activeStages.map((stage) => {
                 const stageArtists = visibleArtists.filter((a) => a.stage === stage);
-                const stageColor = STAGE_COLORS[stage] ?? "#f72585";
+                const stageColor = STAGE_COLORS[stage] ?? "#e03030";
                 return (
                   <div key={stage} style={{
                     width: stageW, flexShrink: 0,
                     position: "relative",
-                    borderLeft: "1px solid rgba(255,255,255,0.04)",
+                    borderLeft: "1px solid rgba(28,20,16,0.08)",
                   }}>
                     {/* Hour grid lines */}
                     {hourMarks.map((h) => (
@@ -1024,8 +1043,8 @@ function TimetableTab({
                         top: (h * 60 - TT_SCHED_START) * TT_PX_PER_MIN,
                         left: 0, right: 0, height: 1,
                         background: h % 2 === 0
-                          ? "rgba(255,255,255,0.06)"
-                          : "rgba(255,255,255,0.03)",
+                          ? "rgba(28,20,16,0.08)"
+                          : "rgba(28,20,16,0.04)",
                       }} />
                     ))}
 
@@ -1043,9 +1062,9 @@ function TimetableTab({
                             top: top + 2, left: 3, right: 3,
                             height: height - 4,
                             borderRadius: 8,
-                            border: `1.5px solid ${isPicked ? "#f72585" : pickers.length > 0 ? stageColor + "88" : stageColor + "44"}`,
+                            border: `1.5px solid ${isPicked ? "#e03030" : pickers.length > 0 ? stageColor + "88" : stageColor + "44"}`,
                             background: isPicked
-                              ? "rgba(247,37,133,0.28)"
+                              ? "rgba(224,48,48,0.22)"
                               : pickers.length > 0 ? `${stageColor}28` : `${stageColor}12`,
                             display: "flex", flexDirection: "column",
                             alignItems: "flex-start", justifyContent: "flex-start",
@@ -1060,7 +1079,7 @@ function TimetableTab({
                               position: "absolute", top: 3, right: 3,
                               width: 18, height: 18, borderRadius: "50%",
                               border: "none",
-                              background: isPicked ? "rgba(247,37,133,0.4)" : "rgba(255,255,255,0.12)",
+                              background: isPicked ? "rgba(224,48,48,0.4)" : "rgba(28,20,16,0.1)",
                               cursor: "pointer", padding: 0,
                               display: "flex", alignItems: "center", justifyContent: "center",
                               flexShrink: 0,
@@ -1073,13 +1092,14 @@ function TimetableTab({
                           <span style={{
                             fontSize: 10,
                             fontWeight: isPicked || pickers.length > 0 ? 700 : 500,
-                            color: isPicked ? "#fff" : pickers.length > 0 ? "rgba(240,240,245,0.95)" : "rgba(240,240,245,0.7)",
+                            color: isPicked ? "#1c1410" : pickers.length > 0 ? "rgba(28,20,16,0.9)" : "rgba(28,20,16,0.65)",
                             lineHeight: 1.25,
                             overflow: "hidden",
                             display: "block",
                             whiteSpace: height < 54 ? "nowrap" : "normal",
                             textOverflow: height < 54 ? "ellipsis" : "clip",
                             width: "100%",
+                            fontFamily: "'Space Mono', monospace",
                           }}>
                             {artist.name}
                           </span>
@@ -1090,7 +1110,7 @@ function TimetableTab({
                                 <div key={m.id} style={{
                                   width: 14, height: 14, borderRadius: "50%",
                                   background: m.color, flexShrink: 0,
-                                  border: m.id === memberId ? "1.5px solid #f72585" : "1px solid rgba(0,0,0,0.5)",
+                                  border: m.id === memberId ? "1.5px solid #e03030" : "1px solid rgba(28,20,16,0.4)",
                                   overflow: "hidden",
                                   position: "relative",
                                 }}>
@@ -1102,7 +1122,7 @@ function TimetableTab({
                                 </div>
                               ))}
                               {pickers.length > 5 && (
-                                <span style={{ fontSize: 8, color: "rgba(240,240,245,0.5)", fontWeight: 600 }}>+{pickers.length - 5}</span>
+                                <span style={{ fontSize: 8, color: "rgba(28,20,16,0.5)", fontWeight: 600, fontFamily: "'Space Mono', monospace" }}>+{pickers.length - 5}</span>
                               )}
                             </div>
                           )}
@@ -1148,9 +1168,8 @@ function BottomNav({
         bottom: 0,
         left: 0,
         right: 0,
-        background: "rgba(10,10,15,0.95)",
-        backdropFilter: "blur(20px)",
-        borderTop: "1px solid rgba(255,255,255,0.08)",
+        background: "#faf7ed",
+        borderTop: "2px solid #1c1410",
         display: "flex",
         padding: "8px 0 max(8px, env(safe-area-inset-bottom))",
         zIndex: 100,
@@ -1184,7 +1203,7 @@ function BottomNav({
                   position: "absolute",
                   top: -4,
                   right: -8,
-                  background: "#f72585",
+                  background: "#e03030",
                   color: "#fff",
                   borderRadius: 999,
                   fontSize: 10,
@@ -1195,6 +1214,7 @@ function BottomNav({
                   alignItems: "center",
                   justifyContent: "center",
                   padding: "0 3px",
+                  border: "1px solid #1c1410",
                 }}
               >
                 {myPickCount}
@@ -1205,7 +1225,8 @@ function BottomNav({
             style={{
               fontSize: 10,
               fontWeight: active === t.id ? 700 : 500,
-              color: active === t.id ? "#f72585" : "rgba(240,240,245,0.4)",
+              color: active === t.id ? "#e03030" : "rgba(28,20,16,0.45)",
+              fontFamily: "'Space Mono', monospace",
             }}
           >
             {t.label}
@@ -1218,7 +1239,7 @@ function BottomNav({
                 width: 4,
                 height: 4,
                 borderRadius: "50%",
-                background: "#f72585",
+                background: "#e03030",
               }}
             />
           )}
@@ -1250,16 +1271,16 @@ function Header({
         <div style={{ position: "relative", height: 160, overflow: "hidden" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={group.cover_url} alt="cover" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,10,15,1) 0%, rgba(10,10,15,0.3) 60%, transparent 100%)" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(240,235,224,0.95) 0%, rgba(240,235,224,0.3) 60%, transparent 100%)" }} />
           {/* Overlay row */}
           <div style={{ position: "absolute", bottom: 12, left: 16, right: 16, display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: -0.5 }}>{group.name}</div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: "#1c1410", letterSpacing: -0.5, fontFamily: "'Space Mono', monospace" }}>{group.name}</div>
+              <div style={{ fontSize: 12, color: "rgba(28,20,16,0.6)", marginTop: 2, fontFamily: "'Space Mono', monospace" }}>
                 {members.length} crew · Week {group.week ?? 2}
                 {group.website_url && (
                   <a href={group.website_url} target="_blank" rel="noopener noreferrer"
-                    style={{ color: "#4cc9f0", marginLeft: 8, textDecoration: "none", fontWeight: 600 }}>
+                    style={{ color: "#2a5c28", marginLeft: 8, textDecoration: "none", fontWeight: 700 }}>
                     Official site ↗
                   </a>
                 )}
@@ -1277,16 +1298,16 @@ function Header({
         </div>
       ) : (
         /* No cover — compact bar */
-        <div style={{ padding: "14px 16px 12px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#0a0a0f" }}>
+        <div style={{ padding: "14px 16px 12px", borderBottom: "2px solid #1c1410", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#faf7ed" }}>
           <div>
-            <div className="gradient-text" style={{ fontSize: 18, fontWeight: 800, letterSpacing: -0.5 }}>
+            <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: -0.5, color: "#1c1410", fontFamily: "'Space Mono', monospace" }}>
               {group.name}
             </div>
-            <div style={{ fontSize: 12, color: "rgba(240,240,245,0.4)", marginTop: 1 }}>
+            <div style={{ fontSize: 12, color: "rgba(28,20,16,0.5)", marginTop: 1, fontFamily: "'Space Mono', monospace" }}>
               {members.length} crew · Week {group.week ?? 2}
               {group.website_url && (
                 <a href={group.website_url} target="_blank" rel="noopener noreferrer"
-                  style={{ color: "#4cc9f0", marginLeft: 8, textDecoration: "none", fontWeight: 600 }}>
+                  style={{ color: "#2a5c28", marginLeft: 8, textDecoration: "none", fontWeight: 700 }}>
                   Official site ↗
                 </a>
               )}
@@ -1307,7 +1328,7 @@ function Header({
 }
 
 function ScheduleNavIcon({ size = 22, active = false }: { size?: number; active?: boolean }) {
-  const c = active ? "#f72585" : "rgba(240,240,245,0.4)";
+  const c = active ? "#e03030" : "rgba(28,20,16,0.45)";
   return (
     <svg width={size} height={size} viewBox="0 0 22 22" fill="none">
       <rect x="3" y="4" width="16" height="15" rx="3" stroke={c} strokeWidth="1.6" />
@@ -1344,35 +1365,37 @@ function ArtistSheet({ artist, onClose, dayLabels, isPicked, onToggle }: { artis
     {
       label: "Find on Instagram",
       url: `https://www.instagram.com/${handle}/`,
-      bg: "rgba(247,37,133,0.1)",
-      color: "#f72585",
+      bg: "rgba(224,48,48,0.08)",
+      color: "#e03030",
       icon: "◎",
     },
   ];
 
   return (
     <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 300 }} />
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(28,20,16,0.55)", zIndex: 300 }} />
       <div style={{
         position: "fixed", bottom: 0, left: 0, right: 0,
-        background: "#13131a",
-        borderRadius: "24px 24px 0 0",
+        background: "#faf7ed",
+        borderRadius: "16px 16px 0 0",
+        border: "2px solid #1c1410",
+        borderBottom: "none",
         padding: "8px 20px max(28px, env(safe-area-inset-bottom))",
         zIndex: 301,
-        boxShadow: "0 -8px 40px rgba(0,0,0,0.5)",
+        boxShadow: "0 -4px 0 #1c1410",
       }}>
         {/* Drag handle */}
-        <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.15)", borderRadius: 2, margin: "8px auto 20px" }} />
+        <div style={{ width: 36, height: 4, background: "rgba(28,20,16,0.2)", borderRadius: 2, margin: "8px auto 20px" }} />
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-          <div style={{ fontSize: 20, fontWeight: 800 }}>{artist.name}</div>
+          <div style={{ fontSize: 20, fontWeight: 800, fontFamily: "'Space Mono', monospace", color: "#1c1410" }}>{artist.name}</div>
           <button
             onClick={onToggle}
             style={{
-              width: 44, height: 44, borderRadius: "50%", border: "none", cursor: "pointer", flexShrink: 0,
-              background: isPicked ? "rgba(247,37,133,0.2)" : "rgba(255,255,255,0.07)",
+              width: 44, height: 44, borderRadius: "50%", border: "2px solid #1c1410", cursor: "pointer", flexShrink: 0,
+              background: isPicked ? "rgba(224,48,48,0.15)" : "#faf7ed",
               display: "flex", alignItems: "center", justifyContent: "center",
-              transition: "background 0.15s",
+              boxShadow: "2px 2px 0 #1c1410",
             }}
           >
             <HeartIcon size={22} filled={isPicked} />
@@ -1380,27 +1403,30 @@ function ArtistSheet({ artist, onClose, dayLabels, isPicked, onToggle }: { artis
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
           <div style={{
-            display: "inline-block", fontSize: 11, fontWeight: 600,
+            display: "inline-block", fontSize: 11, fontWeight: 700,
             padding: "3px 10px", borderRadius: 999,
             background: dayBgColor(artist.day), color: dayColor(artist.day),
             textTransform: "uppercase", letterSpacing: 0.5,
+            fontFamily: "'Space Mono', monospace",
           }}>
             {dayLabels[artist.day]}
           </div>
           {artist.stage && (
             <div style={{
-              display: "inline-block", fontSize: 11, fontWeight: 600,
+              display: "inline-block", fontSize: 11, fontWeight: 700,
               padding: "3px 10px", borderRadius: 999,
-              background: "rgba(255,255,255,0.08)", color: "rgba(240,240,245,0.7)",
+              background: "rgba(28,20,16,0.08)", color: "rgba(28,20,16,0.7)",
+              fontFamily: "'Space Mono', monospace",
             }}>
               {artist.stage}
             </div>
           )}
           {artist.startTime && artist.endTime && (
             <div style={{
-              display: "inline-block", fontSize: 11, fontWeight: 600,
+              display: "inline-block", fontSize: 11, fontWeight: 700,
               padding: "3px 10px", borderRadius: 999,
-              background: "rgba(255,255,255,0.08)", color: "rgba(240,240,245,0.7)",
+              background: "rgba(28,20,16,0.08)", color: "rgba(28,20,16,0.7)",
+              fontFamily: "'Space Mono', monospace",
             }}>
               {fmtTime(artist.startTime)} – {fmtTime(artist.endTime)}
             </div>
@@ -1412,10 +1438,12 @@ function ArtistSheet({ artist, onClose, dayLabels, isPicked, onToggle }: { artis
             <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer"
               style={{
                 display: "flex", alignItems: "center", gap: 12,
-                background: l.bg, border: `1px solid ${l.color}33`,
-                borderRadius: 14, padding: "14px 16px",
+                background: l.bg, border: `2px solid ${l.color}`,
+                borderRadius: 10, padding: "14px 16px",
                 textDecoration: "none", color: l.color,
-                fontSize: 15, fontWeight: 600,
+                fontSize: 15, fontWeight: 700,
+                fontFamily: "'Space Mono', monospace",
+                boxShadow: "2px 2px 0 #1c1410",
               }}>
               <span style={{ fontSize: 20 }}>{l.icon}</span>
               {l.label}
@@ -1423,7 +1451,7 @@ function ArtistSheet({ artist, onClose, dayLabels, isPicked, onToggle }: { artis
             </a>
           ))}
         </div>
-        <button onClick={onClose} style={{ width: "100%", marginTop: 14, background: "rgba(255,255,255,0.06)", border: "none", borderRadius: 14, color: "rgba(240,240,245,0.5)", fontSize: 15, fontWeight: 600, padding: "13px", cursor: "pointer" }}>
+        <button onClick={onClose} style={{ width: "100%", marginTop: 14, background: "#faf7ed", border: "2px solid #1c1410", borderRadius: 10, color: "rgba(28,20,16,0.6)", fontSize: 15, fontWeight: 700, padding: "13px", cursor: "pointer", fontFamily: "'Space Mono', monospace", boxShadow: "2px 2px 0 #1c1410" }}>
           Close
         </button>
       </div>
@@ -1477,22 +1505,26 @@ function EditProfileSheet({
 
   return (
     <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 300 }} />
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(28,20,16,0.55)", zIndex: 300 }} />
       <div style={{
         position: "fixed", bottom: 0, left: 0, right: 0,
-        background: "#13131a", borderRadius: "24px 24px 0 0",
+        background: "#faf7ed",
+        borderRadius: "16px 16px 0 0",
+        border: "2px solid #1c1410",
+        borderBottom: "none",
         padding: "8px 20px max(32px, env(safe-area-inset-bottom))",
-        zIndex: 301, boxShadow: "0 -8px 40px rgba(0,0,0,0.5)",
+        zIndex: 301,
+        boxShadow: "0 -4px 0 #1c1410",
         overflowY: "auto", maxHeight: "90dvh",
       }}>
-        <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.15)", borderRadius: 2, margin: "8px auto 20px" }} />
+        <div style={{ width: 36, height: 4, background: "rgba(28,20,16,0.2)", borderRadius: 2, margin: "8px auto 20px" }} />
 
         {!editing ? (
           /* ── View mode ── */
           <>
             {/* Big avatar */}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, marginBottom: 28 }}>
-              <div style={{ width: 88, height: 88, borderRadius: "50%", overflow: "hidden", background: member.color, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "3px solid rgba(255,255,255,0.1)" }}>
+              <div style={{ width: 88, height: 88, borderRadius: "50%", overflow: "hidden", background: member.color, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "3px solid #1c1410" }}>
                 {member.photo_url
                   // eslint-disable-next-line @next/next/no-img-element
                   ? <img src={member.photo_url} alt={member.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -1500,9 +1532,9 @@ function EditProfileSheet({
                 }
               </div>
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 20, fontWeight: 800 }}>{member.name}</div>
+                <div style={{ fontSize: 20, fontWeight: 800, fontFamily: "'Space Mono', monospace", color: "#1c1410" }}>{member.name}</div>
                 {member.phone && (
-                  <div style={{ fontSize: 14, color: "rgba(240,240,245,0.45)", marginTop: 4 }}>{member.phone}</div>
+                  <div style={{ fontSize: 14, color: "rgba(28,20,16,0.5)", marginTop: 4, fontFamily: "'Space Mono', monospace" }}>{member.phone}</div>
                 )}
               </div>
             </div>
@@ -1510,19 +1542,19 @@ function EditProfileSheet({
             <button onClick={() => setEditing(true)} style={primaryBtnStyle(false)}>
               Edit profile
             </button>
-            <button onClick={onClose} style={{ width: "100%", marginTop: 8, background: "none", border: "none", borderRadius: 14, color: "rgba(240,240,245,0.4)", fontSize: 15, fontWeight: 600, padding: "13px", cursor: "pointer" }}>
+            <button onClick={onClose} style={{ width: "100%", marginTop: 8, background: "none", border: "none", borderRadius: 10, color: "rgba(28,20,16,0.45)", fontSize: 15, fontWeight: 700, padding: "13px", cursor: "pointer", fontFamily: "'Space Mono', monospace" }}>
               Close
             </button>
           </>
         ) : (
           /* ── Edit mode ── */
           <>
-            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 24 }}>Edit profile</div>
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 24, fontFamily: "'Space Mono', monospace", color: "#1c1410" }}>Edit profile</div>
 
             {/* Photo with pencil overlay */}
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
               <div style={{ position: "relative", width: 88, height: 88 }}>
-                <div style={{ width: 88, height: 88, borderRadius: "50%", overflow: "hidden", background: member.color, border: "3px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: 88, height: 88, borderRadius: "50%", overflow: "hidden", background: member.color, border: "3px solid #1c1410", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {photoUrl
                     // eslint-disable-next-line @next/next/no-img-element
                     ? <img src={photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: photoUrl.startsWith("/avatars") ? "contain" : "cover" }} />
@@ -1536,9 +1568,10 @@ function EditProfileSheet({
                   style={{
                     position: "absolute", bottom: 0, right: 0,
                     width: 28, height: 28, borderRadius: "50%",
-                    background: "#f72585", border: "2px solid #13131a",
+                    background: "#e03030", border: "2px solid #1c1410",
                     cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
                     padding: 0,
+                    boxShadow: "1px 1px 0 #1c1410",
                   }}
                 >
                   <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
@@ -1550,7 +1583,7 @@ function EditProfileSheet({
 
             {/* Photo picker (collapsible) */}
             {showPhotoPicker && (
-              <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "14px", marginBottom: 16 }}>
+              <div style={{ background: "#faf7ed", border: "2px solid #1c1410", borderRadius: 10, padding: "14px", marginBottom: 16, boxShadow: "2px 2px 0 #1c1410" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 10 }}>
                   {PRESET_AVATARS.map((preset) => {
                     const selected = photoUrl === preset.src;
@@ -1558,22 +1591,23 @@ function EditProfileSheet({
                       <button key={preset.id} type="button"
                         onClick={() => { setPhotoUrl(selected ? "" : preset.src); setShowPhotoPicker(false); }}
                         style={{
-                          position: "relative", borderRadius: 14, aspectRatio: "1",
-                          border: selected ? "2.5px solid #f72585" : "2px solid rgba(255,255,255,0.08)",
-                          background: selected ? "rgba(247,37,133,0.15)" : "#f8d377",
+                          position: "relative", borderRadius: 10, aspectRatio: "1",
+                          border: selected ? "2.5px solid #e03030" : "2px solid #1c1410",
+                          background: "#f8d377",
                           padding: 5, cursor: "pointer",
                           display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
+                          boxShadow: "1px 1px 0 #1c1410",
                         }}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={preset.src} alt={preset.label} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                        {selected && <div style={{ position: "absolute", top: 3, right: 3, width: 14, height: 14, borderRadius: "50%", background: "#f72585", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: "#fff", fontWeight: 800 }}>✓</div>}
+                        {selected && <div style={{ position: "absolute", top: 3, right: 3, width: 14, height: 14, borderRadius: "50%", background: "#e03030", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: "#fff", fontWeight: 800 }}>✓</div>}
                       </button>
                     );
                   })}
                 </div>
-                <label style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "8px 12px", cursor: "pointer" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 10, background: "#faf7ed", border: "2px solid #1c1410", borderRadius: 10, padding: "8px 12px", cursor: "pointer", boxShadow: "1px 1px 0 #1c1410" }}>
                   <CameraIcon size={20} />
-                  <span style={{ fontSize: 13, color: "#f72585", fontWeight: 600 }}>Upload your own photo</span>
+                  <span style={{ fontSize: 13, color: "#e03030", fontWeight: 700, fontFamily: "'Space Mono', monospace" }}>Upload your own photo</span>
                   <input type="file" accept="image/*" onChange={(e) => { handlePhoto(e); setShowPhotoPicker(false); }} style={{ display: "none" }} />
                 </label>
               </div>
@@ -1585,9 +1619,9 @@ function EditProfileSheet({
                 placeholder="Your name"
                 value={name}
                 onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) setNameError(""); }}
-                style={{ ...inputStyle, borderColor: nameError ? "rgba(247,37,133,0.6)" : "rgba(255,255,255,0.1)" }}
+                style={{ ...inputStyle, borderColor: nameError ? "#e03030" : "#1c1410" }}
               />
-              {nameError && <div style={{ fontSize: 12, color: "#f72585", marginTop: 4, paddingLeft: 4 }}>{nameError}</div>}
+              {nameError && <div style={{ fontSize: 12, color: "#e03030", marginTop: 4, paddingLeft: 4, fontFamily: "'Space Mono', monospace" }}>{nameError}</div>}
             </div>
 
             {/* Phone */}
@@ -1604,7 +1638,7 @@ function EditProfileSheet({
             <button onClick={handleSave} disabled={saving} style={primaryBtnStyle(saving)}>
               {saving ? "Saving..." : "Save changes"}
             </button>
-            <button onClick={() => { setEditing(false); setShowPhotoPicker(false); }} style={{ width: "100%", marginTop: 8, background: "none", border: "none", borderRadius: 14, color: "rgba(240,240,245,0.4)", fontSize: 15, fontWeight: 600, padding: "13px", cursor: "pointer" }}>
+            <button onClick={() => { setEditing(false); setShowPhotoPicker(false); }} style={{ width: "100%", marginTop: 8, background: "none", border: "none", borderRadius: 10, color: "rgba(28,20,16,0.45)", fontSize: 15, fontWeight: 700, padding: "13px", cursor: "pointer", fontFamily: "'Space Mono', monospace" }}>
               Cancel
             </button>
           </>
@@ -1615,14 +1649,16 @@ function EditProfileSheet({
 }
 
 const inviteBtn: React.CSSProperties = {
-  background: "rgba(247,37,133,0.15)",
-  border: "1px solid rgba(247,37,133,0.3)",
+  background: "#e03030",
+  border: "2px solid #1c1410",
   borderRadius: 999,
-  color: "#f72585",
+  color: "#fff",
   fontSize: 12,
   fontWeight: 700,
   padding: "6px 12px",
   cursor: "pointer",
+  boxShadow: "2px 2px 0 #1c1410",
+  fontFamily: "'Space Mono', monospace",
 };
 
 // ── Main GroupApp ─────────────────────────────────────────────────────────────
@@ -1671,21 +1707,21 @@ export default function GroupApp({ groupId }: { groupId: string }) {
 
   if (loading) {
     return (
-      <div style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0a0a0f" }}>
-        <div style={{ color: "rgba(240,240,245,0.4)", fontSize: 14 }}>Loading...</div>
+      <div style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f0ebe0" }}>
+        <div style={{ color: "rgba(28,20,16,0.5)", fontSize: 14, fontFamily: "'Space Mono', monospace" }}>Loading...</div>
       </div>
     );
   }
 
   if (notFound) {
     return (
-      <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0a0a0f", gap: 12, padding: 24 }}>
+      <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#f0ebe0", gap: 12, padding: 24 }}>
         <CactusIcon size={56} />
-        <div style={{ fontSize: 18, fontWeight: 700 }}>Group not found</div>
-        <div style={{ fontSize: 14, color: "rgba(240,240,245,0.45)", textAlign: "center" }}>
+        <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "'Space Mono', monospace", color: "#1c1410" }}>Group not found</div>
+        <div style={{ fontSize: 14, color: "rgba(28,20,16,0.5)", textAlign: "center", fontFamily: "'Space Mono', monospace" }}>
           This invite link may be invalid or expired.
         </div>
-        <a href="/" style={{ color: "#f72585", fontSize: 14, fontWeight: 600 }}>Create a new group</a>
+        <a href="/" style={{ color: "#e03030", fontSize: 14, fontWeight: 700, fontFamily: "'Space Mono', monospace" }}>Create a new group</a>
       </div>
     );
   }
@@ -1762,18 +1798,18 @@ export default function GroupApp({ groupId }: { groupId: string }) {
 
   return (
     <div
-      style={{ height: "100dvh", display: "flex", flexDirection: "column", background: "#0a0a0f", overflow: "hidden" }}
+      style={{ height: "100dvh", display: "flex", flexDirection: "column", background: "#f0ebe0", overflow: "hidden" }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
       {/* Toasts */}
       {copied && (
-        <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "#06d6a0", color: "#0a0a0f", borderRadius: 999, padding: "8px 20px", fontSize: 13, fontWeight: 700, zIndex: 999 }}>
+        <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "#2a5c28", color: "#fff", borderRadius: 999, padding: "8px 20px", fontSize: 13, fontWeight: 700, zIndex: 999, border: "2px solid #1c1410", boxShadow: "2px 2px 0 #1c1410", fontFamily: "'Space Mono', monospace" }}>
           Invite link copied!
         </div>
       )}
       {refreshing && (
-        <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "rgba(255,255,255,0.1)", backdropFilter: "blur(10px)", color: "#f0f0f5", borderRadius: 999, padding: "8px 20px", fontSize: 13, fontWeight: 600, zIndex: 999, border: "1px solid rgba(255,255,255,0.12)" }}>
+        <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "#faf7ed", color: "#1c1410", borderRadius: 999, padding: "8px 20px", fontSize: 13, fontWeight: 700, zIndex: 999, border: "2px solid #1c1410", boxShadow: "2px 2px 0 #1c1410", fontFamily: "'Space Mono', monospace" }}>
           Refreshing...
         </div>
       )}
@@ -1854,21 +1890,23 @@ export default function GroupApp({ groupId }: { groupId: string }) {
 // ── Style helpers ─────────────────────────────────────────────────────────────
 
 const inputStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.05)",
-  border: "1px solid rgba(255,255,255,0.1)",
-  borderRadius: 12,
-  color: "#f0f0f5",
+  background: "#fff",
+  border: "2px solid #1c1410",
+  borderRadius: 10,
+  color: "#1c1410",
   fontSize: 15,
   padding: "12px 14px",
   outline: "none",
   width: "100%",
+  fontFamily: "'Space Mono', monospace",
+  boxShadow: "2px 2px 0 #1c1410",
 };
 
 function primaryBtnStyle(disabled: boolean): React.CSSProperties {
   return {
-    background: disabled ? "rgba(247,37,133,0.3)" : "linear-gradient(135deg, #f72585, #7b2fff)",
-    border: "none",
-    borderRadius: 14,
+    background: disabled ? "rgba(224,48,48,0.35)" : "#e03030",
+    border: "2px solid #1c1410",
+    borderRadius: 10,
     color: "#fff",
     fontSize: 15,
     fontWeight: 700,
@@ -1876,6 +1914,9 @@ function primaryBtnStyle(disabled: boolean): React.CSSProperties {
     cursor: disabled ? "not-allowed" : "pointer",
     width: "100%",
     marginTop: 4,
+    boxShadow: disabled ? "none" : "3px 3px 0 #1c1410",
+    fontFamily: "'Space Mono', monospace",
+    opacity: disabled ? 0.6 : 1,
   };
 }
 
@@ -1888,21 +1929,21 @@ function fmtTime(t: string): string {
 }
 
 function dayColor(day: Day): string {
-  return { fri: "#f72585", sat: "#fb8500", sun: "#a78bfa" }[day];
+  return { fri: "#e03030", sat: "#2a5c28", sun: "#7b3fc4" }[day];
 }
 
 function dayBgColor(day: Day): string {
   return {
-    fri: "rgba(247,37,133,0.12)",
-    sat: "rgba(251,133,0,0.12)",
-    sun: "rgba(123,47,255,0.12)",
+    fri: "rgba(224,48,48,0.12)",
+    sat: "rgba(42,92,40,0.12)",
+    sun: "rgba(123,63,196,0.12)",
   }[day];
 }
 
 function dayGradient(day: Day): string {
   return {
-    fri: "linear-gradient(135deg, #f72585, #c9184a)",
-    sat: "linear-gradient(135deg, #fb8500, #f4a261)",
-    sun: "linear-gradient(135deg, #7b2fff, #4cc9f0)",
+    fri: "#e03030",
+    sat: "#2a5c28",
+    sun: "#7b3fc4",
   }[day];
 }
