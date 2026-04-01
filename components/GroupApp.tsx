@@ -821,6 +821,7 @@ function TimetableTab({
   memberId,
   members,
   picks,
+  onToggle,
   onArtistTap,
   dayLabels,
 }: {
@@ -850,9 +851,9 @@ function TimetableTab({
   );
   const memberMap = Object.fromEntries(members.map((m) => [m.id, m]));
 
-  function crewForArtist(artistId: string): Member[] {
+  function pickersForArtist(artistId: string): Member[] {
     return picks
-      .filter((p) => p.artist_id === artistId && p.member_id !== memberId)
+      .filter((p) => p.artist_id === artistId)
       .map((p) => memberMap[p.member_id])
       .filter(Boolean) as Member[];
   }
@@ -1035,31 +1036,46 @@ function TimetableTab({
                       const top    = yPos(artist.startTime!);
                       const height = blkH(artist.startTime!, artist.endTime!);
                       const isPicked = myPickSet.has(artist.id);
-                      const crew   = crewForArtist(artist.id);
+                      const pickers = pickersForArtist(artist.id);
                       return (
-                        <button
+                        <div
                           key={artist.id}
-                          onClick={() => onArtistTap(artist)}
                           style={{
                             position: "absolute",
                             top: top + 2, left: 3, right: 3,
                             height: height - 4,
                             borderRadius: 8,
-                            border: `1.5px solid ${isPicked ? "#f72585" : stageColor + "55"}`,
+                            border: `1.5px solid ${isPicked ? "#f72585" : pickers.length > 0 ? stageColor + "88" : stageColor + "44"}`,
                             background: isPicked
                               ? "rgba(247,37,133,0.28)"
-                              : `${stageColor}1a`,
-                            cursor: "pointer",
+                              : pickers.length > 0 ? `${stageColor}28` : `${stageColor}12`,
                             display: "flex", flexDirection: "column",
                             alignItems: "flex-start", justifyContent: "flex-start",
-                            padding: "5px 5px", overflow: "hidden",
+                            padding: "4px 5px", overflow: "hidden",
                             textAlign: "left", gap: 2,
                           }}
                         >
+                          {/* Like button */}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onToggle(artist.id); }}
+                            style={{
+                              position: "absolute", top: 3, right: 3,
+                              width: 18, height: 18, borderRadius: "50%",
+                              border: "none",
+                              background: isPicked ? "rgba(247,37,133,0.4)" : "rgba(255,255,255,0.12)",
+                              cursor: "pointer", padding: 0,
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              flexShrink: 0,
+                            }}
+                          >
+                            <HeartIcon size={10} filled={isPicked} />
+                          </button>
+                          {/* Tap rest to open sheet */}
+                          <div onClick={() => onArtistTap(artist)} style={{ width: "100%", cursor: "pointer", display: "flex", flexDirection: "column", gap: 2, paddingRight: 18 }}>
                           <span style={{
                             fontSize: 10,
-                            fontWeight: isPicked ? 700 : 500,
-                            color: isPicked ? "#fff" : "rgba(240,240,245,0.85)",
+                            fontWeight: isPicked || pickers.length > 0 ? 700 : 500,
+                            color: isPicked ? "#fff" : pickers.length > 0 ? "rgba(240,240,245,0.95)" : "rgba(240,240,245,0.7)",
                             lineHeight: 1.25,
                             overflow: "hidden",
                             display: "block",
@@ -1069,37 +1085,31 @@ function TimetableTab({
                           }}>
                             {artist.name}
                           </span>
-                          {height > 48 && (
-                            <span style={{
-                              fontSize: 9,
-                              color: isPicked ? "rgba(255,255,255,0.65)" : "rgba(240,240,245,0.38)",
-                              lineHeight: 1.2,
-                            }}>
-                              {fmtTime(artist.startTime!)}
-                            </span>
-                          )}
-                          {(isPicked || crew.length > 0) && height > 42 && (
-                            <div style={{ display: "flex", alignItems: "center", gap: 2, marginTop: "auto" }}>
-                              {isPicked && <span style={{ fontSize: 8, color: "#f72585", fontWeight: 800 }}>♥</span>}
-                              {crew.slice(0, 3).map((m) => (
+                          {/* Always show pickers if any */}
+                          {pickers.length > 0 && (
+                            <div style={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "nowrap", overflow: "hidden" }}>
+                              {pickers.slice(0, 5).map((m) => (
                                 <div key={m.id} style={{
-                                  width: 10, height: 10, borderRadius: "50%",
+                                  width: 14, height: 14, borderRadius: "50%",
                                   background: m.color, flexShrink: 0,
-                                  border: "1px solid rgba(0,0,0,0.4)",
+                                  border: m.id === memberId ? "1.5px solid #f72585" : "1px solid rgba(0,0,0,0.5)",
                                   overflow: "hidden",
+                                  position: "relative",
                                 }}>
-                                  {m.photo_url && (
+                                  {m.photo_url
                                     // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={m.photo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                                  )}
+                                    ? <img src={m.photo_url} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                    : <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 7, fontWeight: 700, color: "#fff" }}>{m.name[0].toUpperCase()}</span>
+                                  }
                                 </div>
                               ))}
-                              {crew.length > 3 && (
-                                <span style={{ fontSize: 8, color: "rgba(240,240,245,0.45)", fontWeight: 600 }}>+{crew.length - 3}</span>
+                              {pickers.length > 5 && (
+                                <span style={{ fontSize: 8, color: "rgba(240,240,245,0.5)", fontWeight: 600 }}>+{pickers.length - 5}</span>
                               )}
                             </div>
                           )}
-                        </button>
+                          </div>
+                        </div>
                       );
                     })}
                   </div>
@@ -1128,7 +1138,7 @@ function BottomNav({
 }) {
   const tabs: { id: Tab; label: string }[] = [
     { id: "lineup", label: "Lineup" },
-    { id: "schedule", label: "Schedule" },
+    { id: "schedule", label: "Timetable" },
     { id: "picks", label: "My Picks" },
     { id: "crew", label: "Crew" },
   ];
