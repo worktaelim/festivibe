@@ -66,13 +66,6 @@ function GoogleIcon() {
   );
 }
 
-function KakaoIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24">
-      <path fill="#3A1D1D" d="M12 3C6.477 3 2 6.477 2 10.8c0 2.7 1.56 5.07 3.94 6.53L4.9 21l4.35-2.33C10.04 18.87 11 19 12 19c5.523 0 10-3.477 10-8S17.523 3 12 3z"/>
-    </svg>
-  );
-}
 
 function EmailIcon() {
   return (
@@ -96,7 +89,7 @@ function LoginScreen() {
     ? window.location.origin + "/auth/callback"
     : "/auth/callback";
 
-  async function signInWith(provider: "google" | "kakao") {
+  async function signInWith(provider: "google") {
     setError("");
     setLoading(provider);
     try {
@@ -246,16 +239,6 @@ function LoginScreen() {
               color="#1c1410"
               border="#1c1410"
             />
-            <ProviderBtn
-              onClick={() => signInWith("kakao")}
-              disabled={!!loading}
-              icon={<KakaoIcon />}
-              label={loading === "kakao" ? "Redirecting..." : "Continue with KakaoTalk"}
-              bg="#FEE500"
-              color="#3A1D1D"
-              border="#1c1410"
-            />
-
             <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "4px 0" }}>
               <div style={{ flex: 1, height: 1, background: "rgba(28,20,16,0.15)" }} />
               <span style={{ fontSize: 11, color: "rgba(28,20,16,0.4)", fontFamily: "'Space Mono', monospace" }}>or</span>
