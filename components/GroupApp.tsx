@@ -1324,7 +1324,7 @@ function ScheduleNavIcon({ size = 22, active = false }: { size?: number; active?
 
 // ── Artist link sheet ─────────────────────────────────────────────────────────
 
-function ArtistSheet({ artist, onClose, dayLabels }: { artist: import("@/lib/artists").Artist; onClose: () => void; dayLabels: Record<Day, string> }) {
+function ArtistSheet({ artist, onClose, dayLabels, isPicked, onToggle }: { artist: import("@/lib/artists").Artist; onClose: () => void; dayLabels: Record<Day, string>; isPicked: boolean; onToggle: () => void; }) {
   const q = encodeURIComponent(artist.name);
   const handle = artist.name.toLowerCase().replace(/\s+&\s+/g, "").replace(/[^a-z0-9]/g, "");
 
@@ -1366,7 +1366,20 @@ function ArtistSheet({ artist, onClose, dayLabels }: { artist: import("@/lib/art
         {/* Drag handle */}
         <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.15)", borderRadius: 2, margin: "8px auto 20px" }} />
 
-        <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>{artist.name}</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+          <div style={{ fontSize: 20, fontWeight: 800 }}>{artist.name}</div>
+          <button
+            onClick={onToggle}
+            style={{
+              width: 44, height: 44, borderRadius: "50%", border: "none", cursor: "pointer", flexShrink: 0,
+              background: isPicked ? "rgba(247,37,133,0.2)" : "rgba(255,255,255,0.07)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "background 0.15s",
+            }}
+          >
+            <HeartIcon size={22} filled={isPicked} />
+          </button>
+        </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
           <div style={{
             display: "inline-block", fontSize: 11, fontWeight: 600,
@@ -1710,7 +1723,13 @@ export default function GroupApp({ groupId }: { groupId: string }) {
 
       {/* Artist link sheet */}
       {selectedArtist && (
-        <ArtistSheet artist={selectedArtist} onClose={() => setSelectedArtist(null)} dayLabels={dayLabels} />
+        <ArtistSheet
+          artist={selectedArtist}
+          onClose={() => setSelectedArtist(null)}
+          dayLabels={dayLabels}
+          isPicked={picks.some((p) => p.member_id === memberId && p.artist_id === selectedArtist.id)}
+          onToggle={() => handleToggle(selectedArtist.id)}
+        />
       )}
 
       {/* Edit profile sheet */}
