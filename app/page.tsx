@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createGroup, addMember, randomColor, compressImage, uploadCoverImage } from "@/lib/db";
 import { CactusIcon, CameraIcon, LightningIcon } from "@/components/Icons";
+import AuthGate from "@/components/AuthGate";
 
 const PRESET_AVATARS = [
   { id: "van",    src: "/avatars/van.png",    label: "Van" },
@@ -75,6 +76,7 @@ export default function Home() {
   const weekLabel = week === 1 ? "Week 1 · Apr 10–12" : week === 2 ? "Week 2 · Apr 17–19" : null;
 
   return (
+    <AuthGate>
     <div style={{
       minHeight: "100dvh",
       background: "#f0ebe0",
@@ -312,6 +314,7 @@ export default function Home() {
         Share the link · Pick your artists · See who&apos;s in
       </div>
     </div>
+    </AuthGate>
   );
 }
 

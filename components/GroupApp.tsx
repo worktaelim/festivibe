@@ -1542,6 +1542,15 @@ function EditProfileSheet({
             <button onClick={onClose} style={{ width: "100%", marginTop: 8, background: "none", border: "none", borderRadius: 10, color: "rgba(28,20,16,0.45)", fontSize: 15, fontWeight: 700, padding: "13px", cursor: "pointer", fontFamily: "'Space Mono', monospace" }}>
               Close
             </button>
+            <button
+              onClick={async () => {
+                const { supabase } = await import("@/lib/supabase");
+                await supabase.auth.signOut();
+              }}
+              style={{ width: "100%", marginTop: 4, background: "none", border: "none", borderRadius: 10, color: "rgba(224,48,48,0.7)", fontSize: 13, fontWeight: 700, padding: "10px", cursor: "pointer", fontFamily: "'Space Mono', monospace" }}
+            >
+              Sign out
+            </button>
           </>
         ) : (
           /* ── Edit mode ── */

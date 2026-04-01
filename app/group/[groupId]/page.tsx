@@ -1,5 +1,6 @@
 import { type Metadata } from "next";
 import GroupApp from "@/components/GroupApp";
+import AuthGate from "@/components/AuthGate";
 import { getGroup } from "@/lib/db";
 
 export async function generateMetadata(props: PageProps<"/group/[groupId]">): Promise<Metadata> {
@@ -34,5 +35,9 @@ export async function generateMetadata(props: PageProps<"/group/[groupId]">): Pr
 
 export default async function GroupPage(props: PageProps<"/group/[groupId]">) {
   const { groupId } = await props.params;
-  return <GroupApp groupId={groupId} />;
+  return (
+    <AuthGate>
+      <GroupApp groupId={groupId} />
+    </AuthGate>
+  );
 }
