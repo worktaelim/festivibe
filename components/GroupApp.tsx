@@ -512,16 +512,16 @@ function LineupTab({
 // ── My Picks Tab ──────────────────────────────────────────────────────────────
 
 function PicksTab({
-  groupId,
   memberId,
   members,
   picks,
+  onToggle,
   dayLabels,
 }: {
-  groupId: string;
   memberId: string;
   members: Member[];
   picks: ArtistPick[];
+  onToggle: (artistId: string) => void;
   dayLabels: Record<Day, string>;
 }) {
   const days: Day[] = ["fri", "sat", "sun"];
@@ -613,7 +613,7 @@ function PicksTab({
                     )}
                   </div>
                   <button
-                    onClick={() => togglePick(groupId, memberId, artist.id, true)}
+                    onClick={() => onToggle(artist.id)}
                     style={{
                       background: "none",
                       border: "none",
@@ -1772,10 +1772,10 @@ export default function GroupApp({ groupId }: { groupId: string }) {
         )}
         {activeTab === "picks" && (
           <PicksTab
-            groupId={group.id}
             memberId={memberId}
             members={members}
             picks={picks}
+            onToggle={handleToggle}
             dayLabels={dayLabels}
           />
         )}
