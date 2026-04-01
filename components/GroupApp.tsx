@@ -1070,6 +1070,7 @@ function TimetableTab({
                       return (
                         <div
                           key={artist.id}
+                          onClick={() => onArtistTap(artist)}
                           style={{
                             position: "absolute",
                             top: top + 2, left: 3, right: 3,
@@ -1083,6 +1084,7 @@ function TimetableTab({
                             alignItems: "flex-start", justifyContent: "flex-start",
                             padding: "4px 5px", overflow: "hidden",
                             textAlign: "left", gap: 2,
+                            cursor: "pointer",
                           }}
                         >
                           {/* Like button */}
@@ -1097,8 +1099,7 @@ function TimetableTab({
                           >
                             <HeartIcon size={13} filled={isPicked} />
                           </button>
-                          {/* Tap rest to open sheet */}
-                          <div onClick={() => onArtistTap(artist)} style={{ width: "100%", cursor: "pointer", display: "flex", flexDirection: "column", gap: 2, paddingRight: 18 }}>
+                          <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 2, paddingRight: 18 }}>
                           <span style={{
                             fontSize: 10,
                             fontWeight: isPicked || pickers.length > 0 ? 700 : 500,
