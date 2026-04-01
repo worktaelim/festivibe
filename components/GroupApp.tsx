@@ -19,7 +19,7 @@ import {
   type Member,
   type ArtistPick,
 } from "@/lib/db";
-import { ARTISTS, DAY_LABELS, type Day, type Artist } from "@/lib/artists";
+import { ARTISTS, DAY_LABELS, STAGES, timeToMinutes, type Day, type Artist } from "@/lib/artists";
 import { supabase } from "@/lib/supabase";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -426,10 +426,15 @@ function LineupTab({
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div
                   onClick={() => onArtistTap(artist)}
-                  style={{ fontSize: 15, fontWeight: 600, marginBottom: 4, lineHeight: 1.2, cursor: "pointer" }}
+                  style={{ fontSize: 15, fontWeight: 600, marginBottom: 2, lineHeight: 1.2, cursor: "pointer" }}
                 >
                   {artist.name}
                 </div>
+                {(artist.stage || artist.startTime) && (
+                  <div style={{ fontSize: 11, color: "rgba(240,240,245,0.38)", marginBottom: 3 }}>
+                    {[artist.stage, artist.startTime && artist.endTime ? `${fmtTime(artist.startTime)}–${fmtTime(artist.endTime)}` : null].filter(Boolean).join(" · ")}
+                  </div>
+                )}
                 {interested.length > 0 && (
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <AvatarStack members={interested} />
@@ -557,6 +562,11 @@ function PicksTab({
                 >
                   <div>
                     <div style={{ fontSize: 15, fontWeight: 600 }}>{artist.name}</div>
+                    {(artist.stage || artist.startTime) && (
+                      <div style={{ fontSize: 11, color: "rgba(240,240,245,0.38)", marginTop: 2 }}>
+                        {[artist.stage, artist.startTime && artist.endTime ? `${fmtTime(artist.startTime)}–${fmtTime(artist.endTime)}` : null].filter(Boolean).join(" · ")}
+                      </div>
+                    )}
                     {others.length > 0 && (
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6 }}>
                         <AvatarStack members={others} maxShow={3} />
@@ -748,9 +758,340 @@ function CrewTab({
   );
 }
 
+// ── Timetable Tab ─────────────────────────────────────────────────────────────
+
+const STAGE_COLORS: Record<string, string> = {
+  "Coachella Stage": "#f72585",
+  "Outdoor Theater": "#fb8500",
+  "Sahara":          "#4cc9f0",
+  "Gobi":            "#06d6a0",
+  "Mojave":          "#ffd166",
+  "Sonora":          "#a78bfa",
+  "Yuma":            "#f4a261",
+  "Quasar":          "#e9c46a",
+};
+
+// Day schedule window: 13:00–25:00 (1am next day) = 720 min
+const SCHED_START = 13 * 60; // 780 min... use 13:00
+const SCHED_END   = 25 * 60; // 25:00 = 1500 min
+const SCHED_RANGE = SCHED_END - SCHED_START; // 720 min
+
+const PX_PER_MIN = 1.7; // pixels per minute → 720 * 1.7 ≈ 1224px total width
+const STAGE_LABEL_W = 80;
+const ROW_H = 56;
+const RULER_H = 28;
+
+function TimetableTab({
+  memberId,
+  members,
+  picks,
+  onToggle,
+  onArtistTap,
+}: {
+  memberId: string;
+  members: Member[];
+  picks: ArtistPick[];
+  onToggle: (artistId: string) => void;
+  onArtistTap: (artist: Artist) => void;
+}) {
+  const [activeDay, setActiveDay] = useState<Day>("fri");
+  const [myOnly, setMyOnly] = useState(false);
+  const days: Day[] = ["fri", "sat", "sun"];
+
+  const myPickSet = new Set(
+    picks.filter((p) => p.member_id === memberId).map((p) => p.artist_id)
+  );
+  const memberMap = Object.fromEntries(members.map((m) => [m.id, m]));
+
+  function crewForArtist(artistId: string): Member[] {
+    return picks
+      .filter((p) => p.artist_id === artistId && p.member_id !== memberId)
+      .map((p) => memberMap[p.member_id])
+      .filter(Boolean) as Member[];
+  }
+
+  const dayArtists = ARTISTS.filter(
+    (a) => a.day === activeDay && a.stage && a.startTime && a.endTime
+  );
+
+  const visibleArtists = myOnly
+    ? dayArtists.filter((a) => myPickSet.has(a.id))
+    : dayArtists;
+
+  // Stages that have at least one artist visible today
+  const activeStages = STAGES.filter((s) =>
+    visibleArtists.some((a) => a.stage === s)
+  );
+
+  const totalWidth = SCHED_RANGE * PX_PER_MIN;
+
+  // Hour ruler marks
+  const hourMarks: number[] = [];
+  for (let h = 13; h <= 25; h++) hourMarks.push(h);
+
+  function xPos(time: string): number {
+    return (timeToMinutes(time) - SCHED_START) * PX_PER_MIN;
+  }
+  function blockWidth(start: string, end: string): number {
+    return Math.max((timeToMinutes(end) - timeToMinutes(start)) * PX_PER_MIN, 32);
+  }
+  function formatHour(h: number): string {
+    if (h === 24) return "12a";
+    if (h === 25) return "1a";
+    if (h >= 13) return `${h - 12}p`;
+    return `${h}`;
+  }
+
+  const myPickCount = myPickSet.size;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      {/* Day tabs */}
+      <div style={{ display: "flex", padding: "12px 16px 0", gap: 8, background: "#0a0a0f", flexShrink: 0 }}>
+        {days.map((d) => (
+          <button
+            key={d}
+            onClick={() => setActiveDay(d)}
+            style={{
+              flex: 1, padding: "8px 0", borderRadius: 12, border: "none",
+              background: activeDay === d ? dayGradient(d) : "rgba(255,255,255,0.06)",
+              color: activeDay === d ? "#fff" : "rgba(240,240,245,0.5)",
+              fontSize: 12, fontWeight: 700, cursor: "pointer",
+              textTransform: "uppercase", letterSpacing: 0.5,
+            }}
+          >
+            {DAY_LABELS[d].split(" ")[0]}
+            <br />
+            <span style={{ fontSize: 10, fontWeight: 500 }}>
+              {DAY_LABELS[d].split(" ").slice(1).join(" ")}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Toggle: All / My Schedule */}
+      <div style={{ display: "flex", padding: "10px 16px 8px", gap: 8, background: "#0a0a0f", flexShrink: 0, alignItems: "center" }}>
+        <button
+          onClick={() => setMyOnly(false)}
+          style={{
+            padding: "6px 14px", borderRadius: 999, border: "none", cursor: "pointer",
+            background: !myOnly ? "rgba(247,37,133,0.2)" : "rgba(255,255,255,0.06)",
+            color: !myOnly ? "#f72585" : "rgba(240,240,245,0.5)",
+            fontSize: 12, fontWeight: 700,
+          }}
+        >
+          All artists
+        </button>
+        <button
+          onClick={() => setMyOnly(true)}
+          style={{
+            padding: "6px 14px", borderRadius: 999, border: "none", cursor: "pointer",
+            background: myOnly ? "rgba(247,37,133,0.2)" : "rgba(255,255,255,0.06)",
+            color: myOnly ? "#f72585" : "rgba(240,240,245,0.5)",
+            fontSize: 12, fontWeight: 700,
+            display: "flex", alignItems: "center", gap: 6,
+          }}
+        >
+          My schedule
+          {myPickCount > 0 && (
+            <span style={{
+              background: "#f72585", color: "#fff", borderRadius: 999,
+              fontSize: 10, fontWeight: 700, minWidth: 16, height: 16,
+              display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 4px",
+            }}>
+              {myPickCount}
+            </span>
+          )}
+        </button>
+        <span style={{ marginLeft: "auto", fontSize: 11, color: "rgba(240,240,245,0.3)" }}>← scroll →</span>
+      </div>
+
+      {/* Grid */}
+      <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
+        <div style={{ display: "flex", minHeight: "100%" }}>
+          {/* Fixed stage labels */}
+          <div style={{ width: STAGE_LABEL_W, flexShrink: 0, paddingTop: RULER_H }}>
+            {activeStages.map((stage) => (
+              <div
+                key={stage}
+                style={{
+                  height: ROW_H,
+                  display: "flex",
+                  alignItems: "center",
+                  paddingRight: 6,
+                  borderBottom: "1px solid rgba(255,255,255,0.04)",
+                }}
+              >
+                <span style={{
+                  fontSize: 9,
+                  fontWeight: 700,
+                  color: STAGE_COLORS[stage] ?? "rgba(240,240,245,0.5)",
+                  textTransform: "uppercase",
+                  letterSpacing: 0.3,
+                  lineHeight: 1.2,
+                  paddingLeft: 8,
+                }}>
+                  {stage.replace(" Stage", "").replace("Outdoor ", "OT\n")}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Scrollable timeline */}
+          <div style={{ flex: 1, overflowX: "auto", overflowY: "hidden", paddingBottom: 100 }}>
+            <div style={{ width: totalWidth, position: "relative" }}>
+              {/* Hour ruler */}
+              <div style={{ height: RULER_H, position: "relative", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                {hourMarks.map((h) => {
+                  const x = (h * 60 - SCHED_START) * PX_PER_MIN;
+                  if (x < 0 || x > totalWidth) return null;
+                  return (
+                    <div
+                      key={h}
+                      style={{
+                        position: "absolute",
+                        left: x,
+                        top: 0,
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span style={{ fontSize: 10, color: "rgba(240,240,245,0.35)", fontWeight: 600, paddingLeft: 3 }}>
+                        {formatHour(h)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Stage rows */}
+              {activeStages.map((stage) => {
+                const stageArtists = visibleArtists.filter((a) => a.stage === stage);
+                return (
+                  <div
+                    key={stage}
+                    style={{
+                      height: ROW_H,
+                      position: "relative",
+                      borderBottom: "1px solid rgba(255,255,255,0.04)",
+                    }}
+                  >
+                    {/* Hour grid lines */}
+                    {hourMarks.map((h) => {
+                      const x = (h * 60 - SCHED_START) * PX_PER_MIN;
+                      if (x < 0 || x > totalWidth) return null;
+                      return (
+                        <div
+                          key={h}
+                          style={{
+                            position: "absolute",
+                            left: x,
+                            top: 0,
+                            width: 1,
+                            height: "100%",
+                            background: "rgba(255,255,255,0.04)",
+                          }}
+                        />
+                      );
+                    })}
+
+                    {/* Artist blocks */}
+                    {stageArtists.map((artist) => {
+                      const x = xPos(artist.startTime!);
+                      const w = blockWidth(artist.startTime!, artist.endTime!);
+                      const isPicked = myPickSet.has(artist.id);
+                      const crew = crewForArtist(artist.id);
+                      const stageColor = STAGE_COLORS[stage] ?? "#f72585";
+
+                      return (
+                        <button
+                          key={artist.id}
+                          onClick={() => onArtistTap(artist)}
+                          style={{
+                            position: "absolute",
+                            left: x + 2,
+                            top: 5,
+                            width: w - 4,
+                            height: ROW_H - 10,
+                            borderRadius: 8,
+                            border: `1.5px solid ${isPicked ? "#f72585" : stageColor + "55"}`,
+                            background: isPicked
+                              ? "rgba(247,37,133,0.25)"
+                              : `${stageColor}18`,
+                            cursor: "pointer",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "flex-start",
+                            justifyContent: "center",
+                            padding: "0 5px",
+                            overflow: "hidden",
+                            textAlign: "left",
+                            gap: 1,
+                          }}
+                        >
+                          <span style={{
+                            fontSize: 10,
+                            fontWeight: isPicked ? 700 : 500,
+                            color: isPicked ? "#fff" : "rgba(240,240,245,0.8)",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            width: "100%",
+                            lineHeight: 1.3,
+                          }}>
+                            {artist.name}
+                          </span>
+                          {(isPicked || crew.length > 0) && (
+                            <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                              {isPicked && (
+                                <span style={{ fontSize: 8, color: "#f72585", fontWeight: 800 }}>♥</span>
+                              )}
+                              {crew.slice(0, 3).map((m) => (
+                                <div
+                                  key={m.id}
+                                  style={{
+                                    width: 12, height: 12, borderRadius: "50%",
+                                    background: m.color, flexShrink: 0,
+                                    border: "1px solid rgba(0,0,0,0.4)",
+                                    overflow: "hidden",
+                                  }}
+                                >
+                                  {m.photo_url && (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={m.photo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                  )}
+                                </div>
+                              ))}
+                              {crew.length > 3 && (
+                                <span style={{ fontSize: 8, color: "rgba(240,240,245,0.5)", fontWeight: 600 }}>+{crew.length - 3}</span>
+                              )}
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+
+              {activeStages.length === 0 && myOnly && (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 24px", textAlign: "center", gap: 10 }}>
+                  <div style={{ fontSize: 14, color: "rgba(240,240,245,0.45)" }}>No picks on {DAY_LABELS[activeDay]} yet</div>
+                  <div style={{ fontSize: 13, color: "rgba(240,240,245,0.3)" }}>Heart artists in the Lineup tab</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Bottom Nav ────────────────────────────────────────────────────────────────
 
-type Tab = "lineup" | "picks" | "crew";
+type Tab = "lineup" | "picks" | "crew" | "schedule";
 
 function BottomNav({
   active,
@@ -763,6 +1104,7 @@ function BottomNav({
 }) {
   const tabs: { id: Tab; label: string }[] = [
     { id: "lineup", label: "Lineup" },
+    { id: "schedule", label: "Schedule" },
     { id: "picks", label: "My Picks" },
     { id: "crew", label: "Crew" },
   ];
@@ -801,6 +1143,7 @@ function BottomNav({
         >
           <div style={{ position: "relative" }}>
             {t.id === "lineup" && <MusicIconLarge size={22} active={active === "lineup"} />}
+            {t.id === "schedule" && <ScheduleNavIcon size={22} active={active === "schedule"} />}
             {t.id === "picks" && <HeartNavIcon size={22} active={active === "picks"} />}
             {t.id === "crew" && <CrewNavIcon size={22} active={active === "crew"} />}
             {t.id === "picks" && myPickCount > 0 && (
@@ -931,6 +1274,20 @@ function Header({
   );
 }
 
+function ScheduleNavIcon({ size = 22, active = false }: { size?: number; active?: boolean }) {
+  const c = active ? "#f72585" : "rgba(240,240,245,0.4)";
+  return (
+    <svg width={size} height={size} viewBox="0 0 22 22" fill="none">
+      <rect x="3" y="4" width="16" height="15" rx="3" stroke={c} strokeWidth="1.6" />
+      <line x1="7" y1="2" x2="7" y2="6" stroke={c} strokeWidth="1.6" strokeLinecap="round" />
+      <line x1="15" y1="2" x2="15" y2="6" stroke={c} strokeWidth="1.6" strokeLinecap="round" />
+      <line x1="3" y1="9" x2="19" y2="9" stroke={c} strokeWidth="1.2" />
+      <rect x="6" y="12" width="3" height="3" rx="1" fill={c} />
+      <rect x="11" y="12" width="3" height="3" rx="1" fill={c} opacity="0.6" />
+    </svg>
+  );
+}
+
 // ── Artist link sheet ─────────────────────────────────────────────────────────
 
 function ArtistSheet({ artist, onClose }: { artist: import("@/lib/artists").Artist; onClose: () => void }) {
@@ -976,13 +1333,33 @@ function ArtistSheet({ artist, onClose }: { artist: import("@/lib/artists").Arti
         <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.15)", borderRadius: 2, margin: "8px auto 20px" }} />
 
         <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>{artist.name}</div>
-        <div style={{
-          display: "inline-block", fontSize: 11, fontWeight: 600,
-          padding: "3px 10px", borderRadius: 999, marginBottom: 20,
-          background: dayBgColor(artist.day), color: dayColor(artist.day),
-          textTransform: "uppercase", letterSpacing: 0.5,
-        }}>
-          {DAY_LABELS[artist.day]}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+          <div style={{
+            display: "inline-block", fontSize: 11, fontWeight: 600,
+            padding: "3px 10px", borderRadius: 999,
+            background: dayBgColor(artist.day), color: dayColor(artist.day),
+            textTransform: "uppercase", letterSpacing: 0.5,
+          }}>
+            {DAY_LABELS[artist.day]}
+          </div>
+          {artist.stage && (
+            <div style={{
+              display: "inline-block", fontSize: 11, fontWeight: 600,
+              padding: "3px 10px", borderRadius: 999,
+              background: "rgba(255,255,255,0.08)", color: "rgba(240,240,245,0.7)",
+            }}>
+              {artist.stage}
+            </div>
+          )}
+          {artist.startTime && artist.endTime && (
+            <div style={{
+              display: "inline-block", fontSize: 11, fontWeight: 600,
+              padding: "3px 10px", borderRadius: 999,
+              background: "rgba(255,255,255,0.08)", color: "rgba(240,240,245,0.7)",
+            }}>
+              {fmtTime(artist.startTime)} – {fmtTime(artist.endTime)}
+            </div>
+          )}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1300,6 +1677,15 @@ export default function GroupApp({ groupId }: { groupId: string }) {
             onArtistTap={setSelectedArtist}
           />
         )}
+        {activeTab === "schedule" && (
+          <TimetableTab
+            memberId={memberId}
+            members={members}
+            picks={picks}
+            onToggle={handleToggle}
+            onArtistTap={setSelectedArtist}
+          />
+        )}
         {activeTab === "picks" && (
           <PicksTab
             groupId={group.id}
@@ -1348,6 +1734,14 @@ function primaryBtnStyle(disabled: boolean): React.CSSProperties {
     width: "100%",
     marginTop: 4,
   };
+}
+
+function fmtTime(t: string): string {
+  const [h, m] = t.split(":").map(Number);
+  const realH = h >= 24 ? h - 24 : h;
+  const ampm = h >= 24 ? "am" : h >= 12 ? "pm" : "am";
+  const disp = realH === 0 ? 12 : realH > 12 ? realH - 12 : realH;
+  return m === 0 ? `${disp}${ampm}` : `${disp}:${String(m).padStart(2, "0")}${ampm}`;
 }
 
 function dayColor(day: Day): string {
