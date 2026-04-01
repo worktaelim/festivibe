@@ -3,7 +3,15 @@
 import { useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
-import { CactusIcon, LightningIcon } from "./Icons";
+import { CactusIcon, LightningIcon, CameraIcon } from "./Icons";
+import { compressImage } from "@/lib/db";
+
+const PRESET_AVATARS = [
+  { id: "van",    src: "/avatars/van.png" },
+  { id: "palms",  src: "/avatars/palms.png" },
+  { id: "tshirt", src: "/avatars/tshirt.png" },
+  { id: "tent",   src: "/avatars/tent.png" },
+];
 
 // ── Provider button styles ────────────────────────────────────────────────────
 
@@ -271,32 +279,153 @@ function LoginScreen() {
   );
 }
 
+// ── OnboardingScreen ─────────────────────────────────────────────────────────
+
+function OnboardingScreen({ session, onDone }: { session: Session; onDone: () => void }) {
+  const meta = session.user.user_metadata ?? {};
+  const [name, setName] = useState<string>(meta.full_name ?? meta.name ?? "");
+  const [phone, setPhone] = useState<string>(meta.phone ?? "");
+  const [photoUrl, setPhotoUrl] = useState<string>(meta.photo_url ?? meta.avatar_url ?? "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const inputStyle: React.CSSProperties = {
+    background: "#fff",
+    border: "2px solid #1c1410",
+    borderRadius: 10,
+    color: "#1c1410",
+    fontSize: 15,
+    padding: "12px 14px",
+    outline: "none",
+    width: "100%",
+    fontFamily: "'Space Mono', monospace",
+    boxShadow: "2px 2px 0 #1c1410",
+    boxSizing: "border-box",
+  };
+
+  async function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await compressImage(file);
+    setPhotoUrl(url);
+  }
+
+  async function handleSave() {
+    if (!name.trim()) { setError("Name is required"); return; }
+    if (!phone.trim()) { setError("Phone number is required"); return; }
+    setSaving(true);
+    setError("");
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { full_name: name.trim(), phone: phone.trim(), photo_url: photoUrl },
+      });
+      if (error) throw error;
+      onDone();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const initials = name.trim().split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase() || "?";
+
+  return (
+    <div style={{ minHeight: "100dvh", background: "#f0ebe0", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px" }}>
+      <div style={{ background: "#faf7ed", border: "2px solid #1c1410", borderRadius: 10, padding: "28px 24px", width: "100%", maxWidth: 380, boxShadow: "3px 3px 0 #1c1410" }}>
+        <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 6, fontFamily: "'Space Mono', monospace", color: "#1c1410" }}>
+          Set up your profile
+        </div>
+        <div style={{ fontSize: 13, color: "rgba(28,20,16,0.5)", marginBottom: 24, fontFamily: "'Space Mono', monospace" }}>
+          Your crew will see this
+        </div>
+
+        {/* Photo */}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+          <div style={{ position: "relative" }}>
+            <div style={{ width: 88, height: 88, borderRadius: "50%", overflow: "hidden", background: "#e03030", border: "3px solid #1c1410", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {photoUrl
+                // eslint-disable-next-line @next/next/no-img-element
+                ? <img src={photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: photoUrl.startsWith("/avatars") ? "contain" : "cover" }} />
+                : <span style={{ fontSize: 28, fontWeight: 700, color: "#fff", fontFamily: "'Space Mono', monospace" }}>{initials}</span>
+              }
+            </div>
+            <label style={{ position: "absolute", bottom: 0, right: 0, width: 28, height: 28, borderRadius: "50%", background: "#e03030", border: "2px solid #1c1410", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "1px 1px 0 #1c1410" }}>
+              <CameraIcon size={14} />
+              <input type="file" accept="image/*" onChange={handlePhoto} style={{ display: "none" }} />
+            </label>
+          </div>
+        </div>
+
+        {/* Preset avatars */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 16 }}>
+          {PRESET_AVATARS.map((p) => {
+            const selected = photoUrl === p.src;
+            return (
+              <button key={p.id} type="button" onClick={() => setPhotoUrl(selected ? "" : p.src)} style={{ borderRadius: 10, aspectRatio: "1", border: selected ? "2.5px solid #e03030" : "2px solid #1c1410", background: "#f8d377", padding: 5, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", boxShadow: selected ? "2px 2px 0 #1c1410" : "1px 1px 0 #1c1410" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={p.src} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Fields */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
+          <input placeholder="Your name *" value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} autoFocus />
+          <input placeholder="Phone number *" value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" style={inputStyle} />
+        </div>
+
+        {error && (
+          <div style={{ marginBottom: 12, padding: "10px 14px", background: "rgba(224,48,48,0.08)", border: "2px solid #e03030", borderRadius: 10, fontSize: 13, color: "#e03030", fontFamily: "'Space Mono', monospace" }}>
+            {error}
+          </div>
+        )}
+
+        <button
+          onClick={handleSave}
+          disabled={saving || !name.trim() || !phone.trim()}
+          style={{ background: saving || !name.trim() || !phone.trim() ? "rgba(224,48,48,0.35)" : "#e03030", border: "2px solid #1c1410", borderRadius: 10, color: "#fff", fontSize: 15, fontWeight: 700, padding: "14px", cursor: saving || !name.trim() || !phone.trim() ? "not-allowed" : "pointer", width: "100%", boxShadow: saving || !name.trim() || !phone.trim() ? "none" : "3px 3px 0 #1c1410", fontFamily: "'Space Mono', monospace", opacity: saving || !name.trim() || !phone.trim() ? 0.6 : 1 }}
+        >
+          {saving ? "Saving..." : "Let's go →"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── AuthGate ──────────────────────────────────────────────────────────────────
 
 export default function AuthGate({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
+  const [profileDone, setProfileDone] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
+      const meta = data.session?.user?.user_metadata ?? {};
+      if (meta.phone && meta.full_name) setProfileDone(true);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      const meta = session?.user?.user_metadata ?? {};
+      if (meta.phone && meta.full_name) setProfileDone(true);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  // Loading state — blank cream screen while we check
   if (session === undefined) {
-    return (
-      <div style={{ minHeight: "100dvh", background: "#f0ebe0" }} />
-    );
+    return <div style={{ minHeight: "100dvh", background: "#f0ebe0" }} />;
   }
 
   if (!session) {
     return <LoginScreen />;
+  }
+
+  if (!profileDone) {
+    return <OnboardingScreen session={session} onDone={() => setProfileDone(true)} />;
   }
 
   return <>{children}</>;

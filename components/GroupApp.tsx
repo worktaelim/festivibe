@@ -133,9 +133,20 @@ function JoinForm({
     ? (() => { try { return JSON.parse(localStorage.getItem("festivibe_user") ?? "{}"); } catch { return {}; } })()
     : {};
 
-  const [name, setName] = useState<string>(savedProfile.name ?? "");
-  const [phone, setPhone] = useState<string>(savedProfile.phone ?? "");
-  const [photoUrl, setPhotoUrl] = useState<string>(savedProfile.photo_url ?? "");
+  // Pre-fill from Supabase auth metadata if available
+  const [authMeta] = useState<Record<string, string>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const raw = localStorage.getItem("sb-igkfjtvujhzebezxsacs-auth-token");
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      return parsed?.user?.user_metadata ?? {};
+    } catch { return {}; }
+  });
+
+  const [name, setName] = useState<string>(savedProfile.name ?? authMeta.full_name ?? authMeta.name ?? "");
+  const [phone, setPhone] = useState<string>(savedProfile.phone ?? authMeta.phone ?? "");
+  const [photoUrl, setPhotoUrl] = useState<string>(savedProfile.photo_url ?? authMeta.photo_url ?? authMeta.avatar_url ?? "");
   const [loading, setLoading] = useState(false);
   const [nameError, setNameError] = useState("");
   const [phoneError, setPhoneError] = useState("");
