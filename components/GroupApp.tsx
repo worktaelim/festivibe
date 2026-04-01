@@ -1477,10 +1477,12 @@ function EditProfileSheet({
   member,
   onSave,
   onClose,
+  onLeave,
 }: {
   member: Member;
   onSave: (updates: { name: string; photo_url: string; phone: string }) => Promise<void>;
   onClose: () => void;
+  onLeave: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [showPhotoPicker, setShowPhotoPicker] = useState(false);
@@ -1558,11 +1560,19 @@ function EditProfileSheet({
               Close
             </button>
             <button
+              onClick={() => {
+                if (confirm("Leave this group? You can rejoin with the invite code.")) onLeave();
+              }}
+              style={{ width: "100%", marginTop: 4, background: "none", border: "none", borderRadius: 10, color: "rgba(224,48,48,0.7)", fontSize: 13, fontWeight: 700, padding: "10px", cursor: "pointer", fontFamily: "'Space Mono', monospace" }}
+            >
+              Leave group
+            </button>
+            <button
               onClick={async () => {
                 const { supabase } = await import("@/lib/supabase");
                 await supabase.auth.signOut();
               }}
-              style={{ width: "100%", marginTop: 4, background: "none", border: "none", borderRadius: 10, color: "rgba(224,48,48,0.7)", fontSize: 13, fontWeight: 700, padding: "10px", cursor: "pointer", fontFamily: "'Space Mono', monospace" }}
+              style={{ width: "100%", marginTop: 0, background: "none", border: "none", borderRadius: 10, color: "rgba(28,20,16,0.3)", fontSize: 12, fontWeight: 700, padding: "8px", cursor: "pointer", fontFamily: "'Space Mono', monospace" }}
             >
               Sign out
             </button>
@@ -1789,6 +1799,15 @@ export default function GroupApp({ groupId }: { groupId: string }) {
     setMembers((prev) => prev.map((m) => m.id === memberId ? { ...m, ...updates } : m));
   }
 
+  async function handleLeaveGroup() {
+    if (!memberId || !group) return;
+    await supabase.from("members").delete().eq("id", memberId);
+    await supabase.from("picks").delete().eq("member_id", memberId);
+    localStorage.removeItem(`festivibe_member_${group.id}`);
+    localStorage.removeItem("festivibe_last_group");
+    window.location.href = "/";
+  }
+
   async function handleToggle(artistId: string) {
     const pickId = `${memberId}_${artistId}`;
     const isCurrentlyPicked = picks.some(
@@ -1869,6 +1888,7 @@ export default function GroupApp({ groupId }: { groupId: string }) {
           member={currentMember}
           onSave={handleSaveProfile}
           onClose={() => setShowEditProfile(false)}
+          onLeave={handleLeaveGroup}
         />
       )}
 
