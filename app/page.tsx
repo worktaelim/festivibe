@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createGroup, addMember, getGroup, randomColor, compressImage, uploadCoverImage } from "@/lib/db";
 import { CactusIcon, CameraIcon, LightningIcon } from "@/components/Icons";
 import AuthGate from "@/components/AuthGate";
+import { supabase } from "@/lib/supabase";
 
 const PRESET_AVATARS = [
   { id: "van",    src: "/avatars/van.png",    label: "Van" },
@@ -30,9 +31,15 @@ export default function Home() {
   const [error, setError] = useState("");
   const [joinCode, setJoinCode] = useState("");
   const [joinError, setJoinError] = useState("");
+  const [userName, setUserName] = useState("");
 
-  // On mount: if user already belongs to a group, redirect there
+  // On mount: load user name + redirect if already in a group
   useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const meta = data.user?.user_metadata ?? {};
+      const first = (meta.full_name ?? meta.name ?? "").split(" ")[0];
+      if (first) setUserName(first);
+    });
     const lastGroup = localStorage.getItem("festivibe_last_group");
     if (lastGroup) {
       router.replace(`/group/${lastGroup}`);
@@ -135,6 +142,11 @@ export default function Home() {
         {/* ── Home ── */}
         {step === "home" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {userName && (
+              <div style={{ fontSize: 15, fontFamily: "'Space Mono', monospace", color: "rgba(28,20,16,0.6)", marginBottom: 4 }}>
+                Hi <strong style={{ color: "#1c1410" }}>{userName}</strong>! 👋
+              </div>
+            )}
             <button onClick={() => setStep("week")} style={gradientBtn}>
               Create a group
             </button>
