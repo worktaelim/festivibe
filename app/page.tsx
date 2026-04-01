@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createGroup, addMember, randomColor, compressImage, uploadCoverImage } from "@/lib/db";
+import { createGroup, addMember, getGroup, randomColor, compressImage, uploadCoverImage } from "@/lib/db";
 import { CactusIcon, CameraIcon, LightningIcon } from "@/components/Icons";
 import AuthGate from "@/components/AuthGate";
 
@@ -13,7 +13,7 @@ const PRESET_AVATARS = [
   { id: "tent",   src: "/avatars/tent.png",   label: "Tent" },
 ];
 
-type Step = "home" | "week" | "cover" | "group-info" | "your-info";
+type Step = "home" | "join" | "week" | "cover" | "group-info" | "your-info";
 
 export default function Home() {
   const router = useRouter();
@@ -28,6 +28,23 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [coverUploading, setCoverUploading] = useState(false);
   const [error, setError] = useState("");
+  const [joinCode, setJoinCode] = useState("");
+  const [joinError, setJoinError] = useState("");
+
+  async function handleJoin() {
+    if (joinCode.length < 6) return;
+    setLoading(true);
+    setJoinError("");
+    try {
+      const group = await getGroup(joinCode);
+      if (!group) { setJoinError("Group not found. Check the code and try again."); return; }
+      router.push(`/group/${group.code}`);
+    } catch {
+      setJoinError("Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleCoverPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -112,9 +129,37 @@ export default function Home() {
               Create a group
             </button>
             <div style={{ textAlign: "center", color: "rgba(28,20,16,0.35)", fontSize: 12, margin: "4px 0", fontFamily: "'Space Mono', monospace" }}>— or —</div>
-            <div style={{ background: "rgba(28,20,16,0.04)", border: "2px solid rgba(28,20,16,0.15)", borderRadius: 10, padding: "14px", textAlign: "center", fontSize: 13, color: "rgba(28,20,16,0.5)", fontFamily: "'Space Mono', monospace" }}>
-              Got an invite link? Open it in any browser to join a group.
+            <button onClick={() => setStep("join")} style={{ background: "#faf7ed", border: "2px solid #1c1410", borderRadius: 10, color: "#1c1410", fontSize: 16, fontWeight: 700, padding: "16px", cursor: "pointer", boxShadow: "3px 3px 0 #1c1410", width: "100%", fontFamily: "'Space Mono', monospace" }}>
+              Join a group
+            </button>
+          </div>
+        )}
+
+        {/* ── Join ── */}
+        {step === "join" && (
+          <div>
+            <BackBtn onClick={() => { setStep("home"); setJoinCode(""); setJoinError(""); }} />
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 6, fontFamily: "'Space Mono', monospace", color: "#1c1410" }}>Enter invite code</div>
+            <div style={{ fontSize: 13, color: "rgba(28,20,16,0.5)", marginBottom: 20, fontFamily: "'Space Mono', monospace" }}>
+              Ask your crew for the 6-character code
             </div>
+            <input
+              placeholder="abc123"
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ""))}
+              onKeyDown={(e) => e.key === "Enter" && handleJoin()}
+              maxLength={6}
+              autoFocus
+              style={{ ...inputStyle, fontSize: 24, textAlign: "center", letterSpacing: 6, marginBottom: 12 }}
+            />
+            {joinError && (
+              <div style={{ marginBottom: 12, padding: "10px 14px", background: "rgba(224,48,48,0.08)", border: "2px solid #e03030", borderRadius: 10, fontSize: 13, color: "#e03030", fontFamily: "'Space Mono', monospace" }}>
+                {joinError}
+              </div>
+            )}
+            <button onClick={handleJoin} disabled={loading || joinCode.length < 6} style={primaryBtn(loading || joinCode.length < 6)}>
+              {loading ? "Looking up..." : "Join →"}
+            </button>
           </div>
         )}
 
