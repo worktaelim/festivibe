@@ -33,12 +33,16 @@ export default function Home() {
   const [joinError, setJoinError] = useState("");
   const [userName, setUserName] = useState("");
 
-  // On mount: load user name + redirect if already in a group
+  // On mount: load user profile from auth + redirect if already in a group
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       const meta = data.user?.user_metadata ?? {};
       const first = (meta.full_name ?? meta.name ?? "").split(" ")[0];
       if (first) setUserName(first);
+      // Pre-fill from auth profile so we can skip "your-info" step
+      if (meta.full_name ?? meta.name) setName(meta.full_name ?? meta.name ?? "");
+      if (meta.phone) setPhone(meta.phone);
+      if (meta.photo_url ?? meta.avatar_url) setPhotoUrl(meta.photo_url ?? meta.avatar_url ?? "");
     });
     const lastGroup = localStorage.getItem("festivibe_last_group");
     if (lastGroup) {
@@ -298,11 +302,37 @@ export default function Home() {
             </div>
             <button
               disabled={!groupName.trim()}
-              onClick={() => setStep("your-info")}
-              style={primaryBtn(!groupName.trim())}
+              onClick={async () => {
+                // If we already have name+phone from auth, skip "your-info" and create directly
+                if (name.trim() && phone.trim()) {
+                  if (!week) return;
+                  setLoading(true);
+                  setError("");
+                  try {
+                    const { id: groupId, code: groupCode } = await createGroup(groupName.trim(), coverUrl, websiteUrl.trim(), week);
+                    const memberId = await addMember(groupId, { name: name.trim(), phone: phone.trim(), photo_url: photoUrl, color: randomColor() });
+                    localStorage.setItem(`festivibe_member_${groupId}`, memberId);
+                    localStorage.setItem("festivibe_last_group", groupCode);
+                    router.push(`/group/${groupCode}`);
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : JSON.stringify(err));
+                    setStep("your-info");
+                  } finally {
+                    setLoading(false);
+                  }
+                } else {
+                  setStep("your-info");
+                }
+              }}
+              style={primaryBtn(!groupName.trim() || loading)}
             >
-              Next
+              {loading ? "Creating..." : "Next"}
             </button>
+            {error && (
+              <div style={{ marginTop: 12, padding: "10px 14px", background: "rgba(224,48,48,0.08)", border: "2px solid #e03030", borderRadius: 10, fontSize: 13, color: "#e03030", fontFamily: "'Space Mono', monospace" }}>
+                {error}
+              </div>
+            )}
           </div>
         )}
 
