@@ -12,11 +12,12 @@ const PRESET_AVATARS = [
   { id: "tent",   src: "/avatars/tent.png",   label: "Tent" },
 ];
 
-type Step = "home" | "cover" | "group-info" | "your-info";
+type Step = "home" | "week" | "cover" | "group-info" | "your-info";
 
 export default function Home() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("home");
+  const [week, setWeek] = useState<1 | 2 | null>(null);
   const [groupName, setGroupName] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [coverUrl, setCoverUrl] = useState("");
@@ -34,7 +35,6 @@ export default function Home() {
       const url = await uploadCoverImage(file);
       setCoverUrl(url);
     } catch {
-      // Storage not set up yet — fall back to base64 (OG image won't work)
       const url = await compressImage(file, 800);
       setCoverUrl(url);
     } finally {
@@ -51,10 +51,10 @@ export default function Home() {
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !groupName.trim()) return;
+    if (!name.trim() || !groupName.trim() || !week) return;
     setLoading(true);
     try {
-      const { id: groupId, code: groupCode } = await createGroup(groupName.trim(), coverUrl, websiteUrl.trim());
+      const { id: groupId, code: groupCode } = await createGroup(groupName.trim(), coverUrl, websiteUrl.trim(), week);
       const memberId = await addMember(groupId, {
         name: name.trim(),
         phone: phone.trim(),
@@ -67,6 +67,8 @@ export default function Home() {
       setLoading(false);
     }
   }
+
+  const weekLabel = week === 1 ? "Week 1 · Apr 10–12" : week === 2 ? "Week 2 · Apr 17–19" : null;
 
   return (
     <div style={{
@@ -94,7 +96,7 @@ export default function Home() {
           Plan Coachella with your crew
         </div>
         <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12, background: "rgba(247,37,133,0.1)", border: "1px solid rgba(247,37,133,0.2)", borderRadius: 999, padding: "4px 12px", fontSize: 12, color: "#f72585", fontWeight: 600 }}>
-          <LightningIcon size={13} /> Week 2 · Apr 17–19
+          <LightningIcon size={13} /> {weekLabel ?? "Apr 10–12 & Apr 17–19"}
         </div>
       </div>
 
@@ -104,7 +106,7 @@ export default function Home() {
         {/* ── Home ── */}
         {step === "home" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <button onClick={() => setStep("cover")} style={gradientBtn}>
+            <button onClick={() => setStep("week")} style={gradientBtn}>
               Create a group
             </button>
             <div style={{ textAlign: "center", color: "rgba(240,240,245,0.3)", fontSize: 12, margin: "4px 0" }}>— or —</div>
@@ -114,28 +116,70 @@ export default function Home() {
           </div>
         )}
 
+        {/* ── Week picker ── */}
+        {step === "week" && (
+          <div>
+            <BackBtn onClick={() => setStep("home")} />
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Which weekend?</div>
+            <div style={{ fontSize: 13, color: "rgba(240,240,245,0.45)", marginBottom: 20 }}>
+              Pick the weekend your crew is going
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {([1, 2] as const).map((w) => {
+                const label = w === 1 ? "Week 1" : "Week 2";
+                const dates = w === 1 ? "Apr 10 – 12" : "Apr 17 – 19";
+                const selected = week === w;
+                return (
+                  <button
+                    key={w}
+                    onClick={() => { setWeek(w); setStep("cover"); }}
+                    style={{
+                      background: selected ? "rgba(247,37,133,0.12)" : "rgba(255,255,255,0.04)",
+                      border: `2px solid ${selected ? "#f72585" : "rgba(255,255,255,0.1)"}`,
+                      borderRadius: 18,
+                      padding: "18px 20px",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: "#f0f0f5", marginBottom: 2 }}>{label}</div>
+                      <div style={{ fontSize: 13, color: "rgba(240,240,245,0.5)" }}>{dates}</div>
+                    </div>
+                    <div style={{
+                      width: 22, height: 22, borderRadius: "50%",
+                      border: `2px solid ${selected ? "#f72585" : "rgba(255,255,255,0.2)"}`,
+                      background: selected ? "#f72585" : "transparent",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0,
+                    }}>
+                      {selected && <span style={{ fontSize: 11, color: "#fff", fontWeight: 800 }}>✓</span>}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* ── Cover photo ── */}
         {step === "cover" && (
           <div>
-            <BackBtn onClick={() => setStep("home")} />
+            <BackBtn onClick={() => setStep("week")} />
             <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Add a cover photo</div>
             <div style={{ fontSize: 13, color: "rgba(240,240,245,0.45)", marginBottom: 20 }}>
               Sets the vibe — like a Partiful poster
             </div>
-
             <label style={{ display: "block", cursor: "pointer" }}>
               <div style={{
-                width: "100%",
-                height: 160,
-                borderRadius: 18,
+                width: "100%", height: 160, borderRadius: 18,
                 background: coverUrl ? "transparent" : "rgba(255,255,255,0.04)",
                 border: coverUrl ? "none" : "2px dashed rgba(255,255,255,0.12)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                overflow: "hidden",
-                marginBottom: 16,
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                overflow: "hidden", marginBottom: 16,
               }}>
                 {coverUploading ? (
                   <div style={{ fontSize: 13, color: "rgba(240,240,245,0.4)" }}>Uploading...</div>
@@ -151,7 +195,6 @@ export default function Home() {
               </div>
               <input type="file" accept="image/*" onChange={handleCoverPhoto} style={{ display: "none" }} />
             </label>
-
             <button onClick={() => setStep("group-info")} disabled={coverUploading} style={primaryBtn(coverUploading)}>
               {coverUploading ? "Uploading..." : coverUrl ? "Looks good" : "Skip for now"}
             </button>

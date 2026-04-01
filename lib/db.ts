@@ -6,6 +6,7 @@ export interface Group {
   name: string;
   cover_url: string;
   website_url: string;
+  week: 1 | 2;
   created_at: string;
 }
 
@@ -48,12 +49,13 @@ export function randomColor(): string {
 export async function createGroup(
   name: string,
   cover_url = "",
-  website_url = ""
+  website_url = "",
+  week: 1 | 2 = 2
 ): Promise<{ id: string; code: string }> {
   const code = generateCode();
   const { data, error } = await supabase
     .from("groups")
-    .insert({ name, cover_url, website_url, code })
+    .insert({ name, cover_url, website_url, code, week })
     .select("id, code")
     .single();
   if (error) throw error;

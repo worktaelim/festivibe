@@ -19,7 +19,7 @@ import {
   type Member,
   type ArtistPick,
 } from "@/lib/db";
-import { ARTISTS, DAY_LABELS, STAGES, timeToMinutes, type Day, type Artist } from "@/lib/artists";
+import { ARTISTS, getDayLabels, STAGES, timeToMinutes, type Day, type Artist } from "@/lib/artists";
 import { supabase } from "@/lib/supabase";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -194,7 +194,7 @@ function JoinForm({
           Festivibe
         </div>
         <div style={{ color: "rgba(240,240,245,0.5)", fontSize: 14, marginTop: 6 }}>
-          Coachella 2026 · Week 2
+          Coachella 2026 · Week {group.week ?? 2}
         </div>
       </div>
 
@@ -354,12 +354,14 @@ function LineupTab({
   picks,
   onToggle,
   onArtistTap,
+  dayLabels,
 }: {
   memberId: string;
   members: Member[];
   picks: ArtistPick[];
   onToggle: (artistId: string) => void;
   onArtistTap: (artist: Artist) => void;
+  dayLabels: Record<Day, string>;
 }) {
   const [activeDay, setActiveDay] = useState<Day>("fri");
   const [search, setSearch] = useState("");
@@ -415,10 +417,10 @@ function LineupTab({
               letterSpacing: 0.5,
             }}
           >
-            {DAY_LABELS[d].split(" ")[0]}
+            {dayLabels[d].split(" ")[0]}
             <br />
             <span style={{ fontSize: 10, fontWeight: 500 }}>
-              {DAY_LABELS[d].split(" ").slice(1).join(" ")}
+              {dayLabels[d].split(" ").slice(1).join(" ")}
             </span>
           </button>
         ))}
@@ -514,11 +516,13 @@ function PicksTab({
   memberId,
   members,
   picks,
+  dayLabels,
 }: {
   groupId: string;
   memberId: string;
   members: Member[];
   picks: ArtistPick[];
+  dayLabels: Record<Day, string>;
 }) {
   const days: Day[] = ["fri", "sat", "sun"];
   const myPickSet = new Set(
@@ -574,7 +578,7 @@ function PicksTab({
                 marginBottom: 10,
               }}
             >
-              {DAY_LABELS[day]}
+              {dayLabels[day]}
             </div>
             {dayArtists.map((artist) => {
               const others = interestedOthers(artist.id);
@@ -636,10 +640,12 @@ function CrewTab({
   members,
   picks,
   currentMemberId,
+  dayLabels,
 }: {
   members: Member[];
   picks: ArtistPick[];
   currentMemberId: string;
+  dayLabels: Record<Day, string>;
 }) {
   const memberMap = Object.fromEntries(members.map((m) => [m.id, m]));
 
@@ -730,7 +736,7 @@ function CrewTab({
                       letterSpacing: 0.5,
                     }}
                   >
-                    {DAY_LABELS[day]}
+                    {dayLabels[day]}
                   </div>
                 )}
               </div>
@@ -819,12 +825,14 @@ function TimetableTab({
   picks,
   onToggle,
   onArtistTap,
+  dayLabels,
 }: {
   memberId: string;
   members: Member[];
   picks: ArtistPick[];
   onToggle: (artistId: string) => void;
   onArtistTap: (artist: Artist) => void;
+  dayLabels: Record<Day, string>;
 }) {
   const [activeDay, setActiveDay] = useState<Day>("fri");
   const [myOnly, setMyOnly] = useState(false);
@@ -892,10 +900,10 @@ function TimetableTab({
               textTransform: "uppercase", letterSpacing: 0.5,
             }}
           >
-            {DAY_LABELS[d].split(" ")[0]}
+            {dayLabels[d].split(" ")[0]}
             <br />
             <span style={{ fontSize: 10, fontWeight: 500 }}>
-              {DAY_LABELS[d].split(" ").slice(1).join(" ")}
+              {dayLabels[d].split(" ").slice(1).join(" ")}
             </span>
           </button>
         ))}
@@ -1109,7 +1117,7 @@ function TimetableTab({
 
               {activeStages.length === 0 && myOnly && (
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 24px", textAlign: "center", gap: 10 }}>
-                  <div style={{ fontSize: 14, color: "rgba(240,240,245,0.45)" }}>No picks on {DAY_LABELS[activeDay]} yet</div>
+                  <div style={{ fontSize: 14, color: "rgba(240,240,245,0.45)" }}>No picks on {dayLabels[activeDay]} yet</div>
                   <div style={{ fontSize: 13, color: "rgba(240,240,245,0.3)" }}>Heart artists in the Lineup tab</div>
                 </div>
               )}
@@ -1256,7 +1264,7 @@ function Header({
             <div>
               <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: -0.5 }}>{group.name}</div>
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>
-                {members.length} crew
+                {members.length} crew · Week {group.week ?? 2}
                 {group.website_url && (
                   <a href={group.website_url} target="_blank" rel="noopener noreferrer"
                     style={{ color: "#4cc9f0", marginLeft: 8, textDecoration: "none", fontWeight: 600 }}>
@@ -1283,7 +1291,7 @@ function Header({
               {group.name}
             </div>
             <div style={{ fontSize: 12, color: "rgba(240,240,245,0.4)", marginTop: 1 }}>
-              {members.length} crew
+              {members.length} crew · Week {group.week ?? 2}
               {group.website_url && (
                 <a href={group.website_url} target="_blank" rel="noopener noreferrer"
                   style={{ color: "#4cc9f0", marginLeft: 8, textDecoration: "none", fontWeight: 600 }}>
@@ -1322,7 +1330,7 @@ function ScheduleNavIcon({ size = 22, active = false }: { size?: number; active?
 
 // ── Artist link sheet ─────────────────────────────────────────────────────────
 
-function ArtistSheet({ artist, onClose }: { artist: import("@/lib/artists").Artist; onClose: () => void }) {
+function ArtistSheet({ artist, onClose, dayLabels }: { artist: import("@/lib/artists").Artist; onClose: () => void; dayLabels: Record<Day, string> }) {
   const q = encodeURIComponent(artist.name);
   const handle = artist.name.toLowerCase().replace(/\s+&\s+/g, "").replace(/[^a-z0-9]/g, "");
 
@@ -1372,7 +1380,7 @@ function ArtistSheet({ artist, onClose }: { artist: import("@/lib/artists").Arti
             background: dayBgColor(artist.day), color: dayColor(artist.day),
             textTransform: "uppercase", letterSpacing: 0.5,
           }}>
-            {DAY_LABELS[artist.day]}
+            {dayLabels[artist.day]}
           </div>
           {artist.stage && (
             <div style={{
@@ -1626,11 +1634,12 @@ export default function GroupApp({ groupId }: { groupId: string }) {
 
   const currentMember = members.find((m) => m.id === memberId);
   const myPickCount = picks.filter((p) => p.member_id === memberId).length;
+  const dayLabels = getDayLabels((group.week ?? 2) as 1 | 2);
 
   function handleShareInvite() {
     const url = window.location.href;
     const myName = currentMember?.name ?? "Someone";
-    const text = `${myName} invites you to ${group!.name}! Come pick your artists and plan Coachella 2026 Week 2 together 🎪\n${url}`;
+    const text = `${myName} invites you to ${group!.name}! Come pick your artists and plan Coachella 2026 Week ${group!.week ?? 2} together 🎪\n${url}`;
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -1707,7 +1716,7 @@ export default function GroupApp({ groupId }: { groupId: string }) {
 
       {/* Artist link sheet */}
       {selectedArtist && (
-        <ArtistSheet artist={selectedArtist} onClose={() => setSelectedArtist(null)} />
+        <ArtistSheet artist={selectedArtist} onClose={() => setSelectedArtist(null)} dayLabels={dayLabels} />
       )}
 
       {/* Edit profile sheet */}
@@ -1735,6 +1744,7 @@ export default function GroupApp({ groupId }: { groupId: string }) {
             picks={picks}
             onToggle={handleToggle}
             onArtistTap={setSelectedArtist}
+            dayLabels={dayLabels}
           />
         )}
         {activeTab === "schedule" && (
@@ -1744,6 +1754,7 @@ export default function GroupApp({ groupId }: { groupId: string }) {
             picks={picks}
             onToggle={handleToggle}
             onArtistTap={setSelectedArtist}
+            dayLabels={dayLabels}
           />
         )}
         {activeTab === "picks" && (
@@ -1752,6 +1763,7 @@ export default function GroupApp({ groupId }: { groupId: string }) {
             memberId={memberId}
             members={members}
             picks={picks}
+            dayLabels={dayLabels}
           />
         )}
         {activeTab === "crew" && (
@@ -1759,6 +1771,7 @@ export default function GroupApp({ groupId }: { groupId: string }) {
             members={members}
             picks={picks}
             currentMemberId={memberId}
+            dayLabels={dayLabels}
           />
         )}
       </div>

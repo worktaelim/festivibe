@@ -167,11 +167,24 @@ export const ARTISTS: Artist[] = [
   { id: "young-thug", name: "Young Thug", day: "sun", stage: "Coachella Stage", startTime: "20:30", endTime: "21:20" },
 ];
 
-export const DAY_LABELS: Record<Day, string> = {
+export const DAY_LABELS_W1: Record<Day, string> = {
+  fri: "Fri Apr 10",
+  sat: "Sat Apr 11",
+  sun: "Sun Apr 12",
+};
+
+export const DAY_LABELS_W2: Record<Day, string> = {
   fri: "Fri Apr 17",
   sat: "Sat Apr 18",
   sun: "Sun Apr 19",
 };
+
+// Keep a default export for legacy use; prefer getDayLabels(week)
+export const DAY_LABELS = DAY_LABELS_W2;
+
+export function getDayLabels(week: 1 | 2): Record<Day, string> {
+  return week === 1 ? DAY_LABELS_W1 : DAY_LABELS_W2;
+}
 
 /** Convert "HH:MM" string (with 24+ for past midnight) to minutes since midnight */
 export function timeToMinutes(t: string): number {
