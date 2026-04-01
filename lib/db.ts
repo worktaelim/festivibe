@@ -25,6 +25,7 @@ export interface Member {
   photo_url: string;
   color: string;
   joined_at: string;
+  is_host: boolean;
 }
 
 export interface ArtistPick {
@@ -76,7 +77,7 @@ export async function getGroup(idOrCode: string): Promise<Group | null> {
 
 export async function addMember(
   groupId: string,
-  member: { name: string; phone: string; photo_url: string; color: string }
+  member: { name: string; phone: string; photo_url: string; color: string; is_host?: boolean }
 ): Promise<string> {
   const { data, error } = await supabase
     .from("members")

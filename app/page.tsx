@@ -101,6 +101,7 @@ export default function Home() {
         phone: phone.trim(),
         photo_url: photoUrl,
         color: randomColor(),
+        is_host: true,
       });
       localStorage.setItem(`festivibe_member_${groupId}`, memberId);
       localStorage.setItem("festivibe_last_group", groupCode);
@@ -311,7 +312,7 @@ export default function Home() {
                   setError("");
                   try {
                     const { id: groupId, code: groupCode } = await createGroup(groupName.trim(), coverUrl, websiteUrl.trim(), week);
-                    const memberId = await addMember(groupId, { name: name.trim(), phone: phone.trim(), photo_url: photoUrl, color: randomColor() });
+                    const memberId = await addMember(groupId, { name: name.trim(), phone: phone.trim(), photo_url: photoUrl, color: randomColor(), is_host: true });
                     localStorage.setItem(`festivibe_member_${groupId}`, memberId);
                     localStorage.setItem("festivibe_last_group", groupCode);
                     router.push(`/group/${groupCode}`);

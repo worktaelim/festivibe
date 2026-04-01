@@ -28,7 +28,7 @@ function Avatar({
   member,
   size = 28,
 }: {
-  member: { name: string; photo_url: string; color: string };
+  member: { name: string; photo_url: string; color: string; is_host?: boolean };
   size?: number;
 }) {
   const initials = member.name
@@ -37,7 +37,8 @@ function Avatar({
     .join("")
     .slice(0, 2)
     .toUpperCase();
-  return member.photo_url ? (
+  const badgeSize = Math.round(size * 0.45);
+  const inner = member.photo_url ? (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={member.photo_url}
@@ -69,6 +70,24 @@ function Avatar({
       }}
     >
       {initials}
+    </div>
+  );
+  if (!member.is_host) return inner;
+  return (
+    <div style={{ position: "relative", flexShrink: 0, width: size, height: size }}>
+      {inner}
+      <div style={{
+        position: "absolute", bottom: -2, right: -2,
+        width: badgeSize, height: badgeSize,
+        background: "#faf7ed",
+        borderRadius: "50%",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: badgeSize * 0.72,
+        lineHeight: 1,
+        border: "1.5px solid #1c1410",
+      }}>
+        🌸
+      </div>
     </div>
   );
 }
@@ -1258,8 +1277,71 @@ function BottomNav({
 
 // ── Top header ────────────────────────────────────────────────────────────────
 
-function GroupInfoSheet({ group, members, onClose }: { group: Group; members: Member[]; onClose: () => void }) {
+function MemberDetailSheet({ member, isHost, currentMemberId, onKick, onClose }: {
+  member: Member;
+  isHost: boolean;
+  currentMemberId: string | null;
+  onKick: (id: string) => Promise<void>;
+  onClose: () => void;
+}) {
+  const [kicking, setKicking] = useState(false);
+  const isSelf = member.id === currentMemberId;
+
+  async function handleKick() {
+    setKicking(true);
+    await onKick(member.id);
+    onClose();
+  }
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(28,20,16,0.55)", zIndex: 400 }} />
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#faf7ed", borderRadius: "16px 16px 0 0", border: "2px solid #1c1410", borderBottom: "none", zIndex: 401, boxShadow: "0 -4px 0 #1c1410", padding: "8px 20px max(32px, env(safe-area-inset-bottom))" }}>
+        <div style={{ width: 36, height: 4, background: "rgba(28,20,16,0.2)", borderRadius: 2, margin: "8px auto 20px" }} />
+
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, marginBottom: 24 }}>
+          <Avatar member={member} size={80} />
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 20, fontWeight: 800, fontFamily: "'Space Mono', monospace", color: "#1c1410", display: "flex", alignItems: "center", gap: 6, justifyContent: "center" }}>
+              {member.name}
+              {member.is_host && <span style={{ fontSize: 18 }}>🌸</span>}
+            </div>
+            {member.phone && (
+              <a href={`tel:${member.phone}`} style={{ fontSize: 14, color: "#e03030", fontFamily: "'Space Mono', monospace", fontWeight: 700, textDecoration: "none", display: "block", marginTop: 4 }}>
+                {member.phone}
+              </a>
+            )}
+          </div>
+        </div>
+
+        {isHost && !isSelf && (
+          <button
+            onClick={handleKick}
+            disabled={kicking}
+            style={{ width: "100%", background: kicking ? "rgba(224,48,48,0.3)" : "rgba(224,48,48,0.1)", border: "2px solid #e03030", borderRadius: 10, color: "#e03030", fontSize: 15, fontWeight: 700, padding: "13px", cursor: kicking ? "not-allowed" : "pointer", fontFamily: "'Space Mono', monospace", boxShadow: kicking ? "none" : "2px 2px 0 #1c1410", marginBottom: 10 }}
+          >
+            {kicking ? "Removing..." : "Kick out"}
+          </button>
+        )}
+        <button onClick={onClose} style={{ width: "100%", background: "none", border: "2px solid #1c1410", borderRadius: 10, color: "rgba(28,20,16,0.6)", fontSize: 15, fontWeight: 700, padding: "13px", cursor: "pointer", fontFamily: "'Space Mono', monospace", boxShadow: "2px 2px 0 #1c1410" }}>
+          Close
+        </button>
+      </div>
+    </>
+  );
+}
+
+function GroupInfoSheet({ group, members, currentMemberId, isHost, onKick, onClose }: {
+  group: Group;
+  members: Member[];
+  currentMemberId: string | null;
+  isHost: boolean;
+  onKick: (id: string) => Promise<void>;
+  onClose: () => void;
+}) {
   const weekDates = (group.week ?? 2) === 1 ? "Apr 10–12" : "Apr 17–19";
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+
   return (
     <>
       <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(28,20,16,0.55)", zIndex: 300 }} />
@@ -1296,12 +1378,22 @@ function GroupInfoSheet({ group, members, onClose }: { group: Group; members: Me
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
             {members.map((m) => (
-              <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div
+                key={m.id}
+                onClick={() => setSelectedMember(m)}
+                style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer", borderRadius: 10, padding: "6px 8px", margin: "0 -8px", transition: "background 0.15s" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(28,20,16,0.05)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
                 <Avatar member={m} size={40} />
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, fontFamily: "'Space Mono', monospace", color: "#1c1410" }}>{m.name}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, fontFamily: "'Space Mono', monospace", color: "#1c1410", display: "flex", alignItems: "center", gap: 6 }}>
+                    {m.name}
+                    {m.is_host && <span style={{ fontSize: 13 }}>🌸</span>}
+                  </div>
                   {m.phone && <div style={{ fontSize: 12, color: "rgba(28,20,16,0.45)", fontFamily: "'Space Mono', monospace" }}>{m.phone}</div>}
                 </div>
+                <span style={{ fontSize: 16, color: "rgba(28,20,16,0.3)" }}>›</span>
               </div>
             ))}
           </div>
@@ -1311,6 +1403,16 @@ function GroupInfoSheet({ group, members, onClose }: { group: Group; members: Me
           </button>
         </div>
       </div>
+
+      {selectedMember && (
+        <MemberDetailSheet
+          member={selectedMember}
+          isHost={isHost}
+          currentMemberId={currentMemberId}
+          onKick={onKick}
+          onClose={() => setSelectedMember(null)}
+        />
+      )}
     </>
   );
 }
@@ -1410,7 +1512,7 @@ function ScheduleNavIcon({ size = 22, active = false }: { size?: number; active?
 
 // ── Artist link sheet ─────────────────────────────────────────────────────────
 
-function ArtistSheet({ artist, onClose, dayLabels, isPicked, onToggle }: { artist: import("@/lib/artists").Artist; onClose: () => void; dayLabels: Record<Day, string>; isPicked: boolean; onToggle: () => void; }) {
+function ArtistSheet({ artist, onClose, dayLabels, isPicked, onToggle, pickers }: { artist: import("@/lib/artists").Artist; onClose: () => void; dayLabels: Record<Day, string>; isPicked: boolean; onToggle: () => void; pickers: Member[]; }) {
   const q = encodeURIComponent(artist.name);
   const handle = artist.name.toLowerCase().replace(/\s+&\s+/g, "").replace(/[^a-z0-9]/g, "");
 
@@ -1499,6 +1601,22 @@ function ArtistSheet({ artist, onClose, dayLabels, isPicked, onToggle }: { artis
             </div>
           )}
         </div>
+
+        {pickers.length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(28,20,16,0.45)", fontFamily: "'Space Mono', monospace", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>
+              Going · {pickers.length}
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {pickers.map((m) => (
+                <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(28,20,16,0.06)", border: "1.5px solid rgba(28,20,16,0.15)", borderRadius: 999, padding: "4px 10px 4px 4px" }}>
+                  <Avatar member={m} size={22} />
+                  <span style={{ fontSize: 13, fontWeight: 700, fontFamily: "'Space Mono', monospace", color: "#1c1410" }}>{m.name.split(" ")[0]}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {links.map((l) => (
@@ -1808,21 +1926,27 @@ export default function GroupApp({ groupId }: { groupId: string }) {
     const unsub1 = subscribeMembers(group.id, setMembers);
     const unsub2 = subscribePicks(group.id, setPicks);
 
+    function refetch() {
+      supabase.from("members").select("*").eq("group_id", group!.id)
+        .then(({ data }) => { if (data) setMembers(data as Member[]); });
+      supabase.from("picks").select("*").eq("group_id", group!.id)
+        .then(({ data }) => { if (data) setPicks(data as ArtistPick[]); });
+    }
+
     // Fallback: re-fetch when tab becomes visible (in case realtime missed updates)
     function onVisible() {
-      if (document.visibilityState === "visible") {
-        supabase.from("members").select("*").eq("group_id", group!.id)
-          .then(({ data }) => { if (data) setMembers(data as Member[]); });
-        supabase.from("picks").select("*").eq("group_id", group!.id)
-          .then(({ data }) => { if (data) setPicks(data as ArtistPick[]); });
-      }
+      if (document.visibilityState === "visible") refetch();
     }
     document.addEventListener("visibilitychange", onVisible);
+
+    // Poll every 10s as safety net for missed realtime events (e.g. DELETE)
+    const poll = setInterval(refetch, 10_000);
 
     return () => {
       unsub1();
       unsub2();
       document.removeEventListener("visibilitychange", onVisible);
+      clearInterval(poll);
     };
   }, [group]);
 
@@ -1884,6 +2008,11 @@ export default function GroupApp({ groupId }: { groupId: string }) {
     localStorage.removeItem(`festivibe_member_${group.id}`);
     localStorage.removeItem("festivibe_last_group");
     window.location.href = "/";
+  }
+
+  async function handleKickMember(targetId: string) {
+    await supabase.from("picks").delete().eq("member_id", targetId);
+    await supabase.from("members").delete().eq("id", targetId);
   }
 
   async function handleToggle(artistId: string) {
@@ -1957,12 +2086,20 @@ export default function GroupApp({ groupId }: { groupId: string }) {
           dayLabels={dayLabels}
           isPicked={picks.some((p) => p.member_id === memberId && p.artist_id === selectedArtist.id)}
           onToggle={() => handleToggle(selectedArtist.id)}
+          pickers={members.filter((m) => picks.some((p) => p.member_id === m.id && p.artist_id === selectedArtist.id))}
         />
       )}
 
       {/* Group info sheet */}
       {showGroupInfo && (
-        <GroupInfoSheet group={group} members={members} onClose={() => setShowGroupInfo(false)} />
+        <GroupInfoSheet
+          group={group}
+          members={members}
+          currentMemberId={memberId}
+          isHost={members.find((m) => m.id === memberId)?.is_host ?? false}
+          onKick={handleKickMember}
+          onClose={() => setShowGroupInfo(false)}
+        />
       )}
 
       {/* Edit profile sheet */}
