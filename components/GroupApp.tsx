@@ -1445,6 +1445,7 @@ function EditProfileSheet({
   onClose: () => void;
 }) {
   const [editing, setEditing] = useState(false);
+  const [showPhotoPicker, setShowPhotoPicker] = useState(false);
   const [name, setName] = useState(member.name);
   const [phone, setPhone] = useState(member.phone);
   const [photoUrl, setPhotoUrl] = useState(member.photo_url);
@@ -1518,44 +1519,67 @@ function EditProfileSheet({
         ) : (
           /* ── Edit mode ── */
           <>
-            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Edit profile</div>
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 24 }}>Edit profile</div>
 
-            {/* Photo */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(240,240,245,0.45)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.8 }}>
-                Photo
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 10 }}>
-                {PRESET_AVATARS.map((preset) => {
-                  const selected = photoUrl === preset.src;
-                  return (
-                    <button key={preset.id} type="button" onClick={() => setPhotoUrl(selected ? "" : preset.src)} style={{
-                      position: "relative", borderRadius: 14, aspectRatio: "1",
-                      border: selected ? "2.5px solid #f72585" : "2px solid rgba(255,255,255,0.08)",
-                      background: selected ? "rgba(247,37,133,0.12)" : "rgba(255,255,255,0.04)",
-                      padding: 5, cursor: "pointer",
-                      display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
-                    }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={preset.src} alt={preset.label} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                      {selected && <div style={{ position: "absolute", top: 3, right: 3, width: 14, height: 14, borderRadius: "50%", background: "#f72585", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: "#fff", fontWeight: 800 }}>✓</div>}
-                    </button>
-                  );
-                })}
-              </div>
-              <label style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "8px 12px", cursor: "pointer" }}>
-                <div style={{ width: 36, height: 36, borderRadius: "50%", overflow: "hidden", background: "rgba(247,37,133,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  {photoUrl && !PRESET_AVATARS.some((a) => a.src === photoUrl)
+            {/* Photo with pencil overlay */}
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+              <div style={{ position: "relative", width: 88, height: 88 }}>
+                <div style={{ width: 88, height: 88, borderRadius: "50%", overflow: "hidden", background: member.color, border: "3px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {photoUrl
                     // eslint-disable-next-line @next/next/no-img-element
-                    ? <img src={photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    : <CameraIcon size={20} />}
+                    ? <img src={photoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: photoUrl.startsWith("/avatars") ? "contain" : "cover" }} />
+                    : <span style={{ fontSize: 32, fontWeight: 700, color: "#fff" }}>{initials}</span>
+                  }
                 </div>
-                <span style={{ fontSize: 13, color: "#f72585", fontWeight: 600 }}>
-                  {photoUrl && !PRESET_AVATARS.some((a) => a.src === photoUrl) ? "Custom photo" : "Upload your own"}
-                </span>
-                <input type="file" accept="image/*" onChange={handlePhoto} style={{ display: "none" }} />
-              </label>
+                {/* Pencil button */}
+                <button
+                  type="button"
+                  onClick={() => setShowPhotoPicker((v) => !v)}
+                  style={{
+                    position: "absolute", bottom: 0, right: 0,
+                    width: 28, height: 28, borderRadius: "50%",
+                    background: "#f72585", border: "2px solid #13131a",
+                    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                    padding: 0,
+                  }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                    <path d="M9.5 1.5L11.5 3.5L4.5 10.5H2.5V8.5L9.5 1.5Z" stroke="#fff" strokeWidth="1.4" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              </div>
             </div>
+
+            {/* Photo picker (collapsible) */}
+            {showPhotoPicker && (
+              <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "14px", marginBottom: 16 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 10 }}>
+                  {PRESET_AVATARS.map((preset) => {
+                    const selected = photoUrl === preset.src;
+                    return (
+                      <button key={preset.id} type="button"
+                        onClick={() => { setPhotoUrl(selected ? "" : preset.src); setShowPhotoPicker(false); }}
+                        style={{
+                          position: "relative", borderRadius: 14, aspectRatio: "1",
+                          border: selected ? "2.5px solid #f72585" : "2px solid rgba(255,255,255,0.08)",
+                          background: selected ? "rgba(247,37,133,0.12)" : "rgba(255,255,255,0.04)",
+                          padding: 5, cursor: "pointer",
+                          display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
+                        }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={preset.src} alt={preset.label} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                        {selected && <div style={{ position: "absolute", top: 3, right: 3, width: 14, height: 14, borderRadius: "50%", background: "#f72585", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: "#fff", fontWeight: 800 }}>✓</div>}
+                      </button>
+                    );
+                  })}
+                </div>
+                <label style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "8px 12px", cursor: "pointer" }}>
+                  <CameraIcon size={20} />
+                  <span style={{ fontSize: 13, color: "#f72585", fontWeight: 600 }}>Upload your own photo</span>
+                  <input type="file" accept="image/*" onChange={(e) => { handlePhoto(e); setShowPhotoPicker(false); }} style={{ display: "none" }} />
+                </label>
+              </div>
+            )}
 
             {/* Name */}
             <div style={{ marginBottom: 10 }}>
@@ -1569,7 +1593,7 @@ function EditProfileSheet({
             </div>
 
             {/* Phone */}
-            <div style={{ marginBottom: 12 }}>
+            <div style={{ marginBottom: 16 }}>
               <input
                 placeholder="Phone number"
                 value={phone}
@@ -1582,7 +1606,7 @@ function EditProfileSheet({
             <button onClick={handleSave} disabled={saving} style={primaryBtnStyle(saving)}>
               {saving ? "Saving..." : "Save changes"}
             </button>
-            <button onClick={() => setEditing(false)} style={{ width: "100%", marginTop: 8, background: "none", border: "none", borderRadius: 14, color: "rgba(240,240,245,0.4)", fontSize: 15, fontWeight: 600, padding: "13px", cursor: "pointer" }}>
+            <button onClick={() => { setEditing(false); setShowPhotoPicker(false); }} style={{ width: "100%", marginTop: 8, background: "none", border: "none", borderRadius: 14, color: "rgba(240,240,245,0.4)", fontSize: 15, fontWeight: 600, padding: "13px", cursor: "pointer" }}>
               Cancel
             </button>
           </>
