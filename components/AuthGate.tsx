@@ -94,7 +94,7 @@ function LoginScreen() {
   const [error, setError] = useState("");
 
   const redirectTo = typeof window !== "undefined"
-    ? window.location.origin + "/auth/callback"
+    ? window.location.origin + "/auth/callback?next=" + encodeURIComponent(window.location.pathname)
     : "/auth/callback";
 
   async function signInWith(provider: "google") {
