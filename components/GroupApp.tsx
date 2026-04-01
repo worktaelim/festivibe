@@ -833,6 +833,16 @@ function TimetableTab({
 }) {
   const [activeDay, setActiveDay] = useState<Day>("fri");
   const [myOnly, setMyOnly] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [containerW, setContainerW] = useState(0);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => setContainerW(entry.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const days: Day[] = ["fri", "sat", "sun"];
 
   const myPickSet = new Set(
@@ -857,6 +867,11 @@ function TimetableTab({
   const activeStages = STAGES.filter((s) =>
     visibleArtists.some((a) => a.stage === s)
   );
+
+  // Expand columns to fill available width on wide screens
+  const stageW = activeStages.length > 0 && containerW > TT_TIME_W + activeStages.length * TT_STAGE_W
+    ? Math.floor((containerW - TT_TIME_W) / activeStages.length)
+    : TT_STAGE_W;
 
   const hourMarks: number[] = [];
   for (let h = 13; h <= 25; h++) hourMarks.push(h);
@@ -934,8 +949,8 @@ function TimetableTab({
 
       {/* Grid: single container scrolls both axes */}
       {activeStages.length > 0 && (
-        <div style={{ flex: 1, overflow: "auto", WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"] }}>
-          <div style={{ minWidth: TT_TIME_W + activeStages.length * TT_STAGE_W, display: "flex", flexDirection: "column" }}>
+        <div ref={scrollRef} style={{ flex: 1, overflow: "auto", WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"] }}>
+          <div style={{ minWidth: TT_TIME_W + activeStages.length * stageW, display: "flex", flexDirection: "column" }}>
 
             {/* Sticky stage-name header row */}
             <div style={{
@@ -951,7 +966,7 @@ function TimetableTab({
               {/* Stage name cells */}
               {activeStages.map((stage) => (
                 <div key={stage} style={{
-                  width: TT_STAGE_W, flexShrink: 0, height: TT_HEADER_H,
+                  width: stageW, flexShrink: 0, height: TT_HEADER_H,
                   display: "flex", alignItems: "center", justifyContent: "center",
                   borderLeft: "1px solid rgba(255,255,255,0.05)",
                   padding: "0 4px",
@@ -999,7 +1014,7 @@ function TimetableTab({
                 const stageColor = STAGE_COLORS[stage] ?? "#f72585";
                 return (
                   <div key={stage} style={{
-                    width: TT_STAGE_W, flexShrink: 0,
+                    width: stageW, flexShrink: 0,
                     position: "relative",
                     borderLeft: "1px solid rgba(255,255,255,0.04)",
                   }}>
