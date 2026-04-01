@@ -1306,12 +1306,8 @@ function MemberDetailSheet({ member, isHost, currentMemberId, onKick, onClose }:
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 20, fontWeight: 800, fontFamily: "'Space Mono', monospace", color: "#1c1410", display: "flex", alignItems: "center", gap: 6, justifyContent: "center" }}>
               {member.name}
+              {member.is_host && <span style={{ fontSize: 13, fontWeight: 700, color: "#e03030", fontFamily: "'Space Mono', monospace" }}>(Host)</span>}
             </div>
-            {member.is_host && (
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 4, background: "rgba(224,48,48,0.08)", border: "1.5px solid #e03030", borderRadius: 999, padding: "2px 10px", fontSize: 12, fontWeight: 700, color: "#e03030", fontFamily: "'Space Mono', monospace" }}>
-                🌸 Host
-              </div>
-            )}
             {member.phone && (
               <a href={`tel:${member.phone}`} style={{ fontSize: 14, color: "#e03030", fontFamily: "'Space Mono', monospace", fontWeight: 700, textDecoration: "none", display: "block", marginTop: 4 }}>
                 {member.phone}
@@ -1395,7 +1391,7 @@ function GroupInfoSheet({ group, members, currentMemberId, isHost, onKick, onClo
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 15, fontWeight: 700, fontFamily: "'Space Mono', monospace", color: "#1c1410", display: "flex", alignItems: "center", gap: 6 }}>
                     {m.name}
-                    {m.is_host && <span style={{ fontSize: 13 }}>🌸</span>}
+                    {m.is_host && <span style={{ fontSize: 12, fontWeight: 700, color: "#e03030" }}>(Host)</span>}
                   </div>
                   {m.phone && <div style={{ fontSize: 12, color: "rgba(28,20,16,0.45)", fontFamily: "'Space Mono', monospace" }}>{m.phone}</div>}
                 </div>
