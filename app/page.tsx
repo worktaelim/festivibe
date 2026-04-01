@@ -138,7 +138,7 @@ export default function Home() {
                     key={w}
                     onClick={() => { setWeek(w); setStep("cover"); }}
                     style={{
-                      background: selected ? "rgba(247,37,133,0.12)" : "rgba(255,255,255,0.04)",
+                      background: selected ? "rgba(247,37,133,0.15)" : "#ffd16640",
                       border: `2px solid ${selected ? "#f72585" : "rgba(255,255,255,0.1)"}`,
                       borderRadius: 18,
                       padding: "18px 20px",
@@ -264,7 +264,7 @@ export default function Home() {
                       style={{
                         position: "relative", borderRadius: 14, aspectRatio: "1",
                         border: selected ? "2.5px solid #f72585" : "2px solid rgba(255,255,255,0.08)",
-                        background: selected ? "rgba(247,37,133,0.12)" : "rgba(255,255,255,0.04)",
+                        background: selected ? "rgba(247,37,133,0.15)" : "#ffd16640",
                         padding: 5, cursor: "pointer",
                         display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
                       }}
