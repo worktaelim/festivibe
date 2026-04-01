@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createGroup, addMember, getGroup, randomColor, compressImage, uploadCoverImage } from "@/lib/db";
 import { CactusIcon, CameraIcon, LightningIcon } from "@/components/Icons";
@@ -31,6 +31,14 @@ export default function Home() {
   const [joinCode, setJoinCode] = useState("");
   const [joinError, setJoinError] = useState("");
 
+  // On mount: if user already belongs to a group, redirect there
+  useEffect(() => {
+    const lastGroup = localStorage.getItem("festivibe_last_group");
+    if (lastGroup) {
+      router.replace(`/group/${lastGroup}`);
+    }
+  }, [router]);
+
   async function handleJoin() {
     if (joinCode.length < 6) return;
     setLoading(true);
@@ -38,6 +46,7 @@ export default function Home() {
     try {
       const group = await getGroup(joinCode);
       if (!group) { setJoinError("Group not found. Check the code and try again."); return; }
+      localStorage.setItem("festivibe_last_group", group.code);
       router.push(`/group/${group.code}`);
     } catch {
       setJoinError("Something went wrong. Try again.");
@@ -82,6 +91,7 @@ export default function Home() {
         color: randomColor(),
       });
       localStorage.setItem(`festivibe_member_${groupId}`, memberId);
+      localStorage.setItem("festivibe_last_group", groupCode);
       router.push(`/group/${groupCode}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : (typeof err === "object" && err !== null && "message" in err) ? String((err as {message: unknown}).message) : JSON.stringify(err));
