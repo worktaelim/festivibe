@@ -951,7 +951,7 @@ function TimetableTab({
   }
 
   const dayArtists = artists.filter(
-    (a) => a.day === activeDay && a.stage && a.startTime && a.endTime
+    (a) => a.day === activeDay && a.stage && a.startTime
   );
   const visibleArtists = dayArtists;
 
@@ -970,8 +970,9 @@ function TimetableTab({
   function yPos(time: string): number {
     return (timeToMinutes(time) - TT_SCHED_START) * TT_PX_PER_MIN;
   }
-  function blkH(start: string, end: string): number {
-    return Math.max((timeToMinutes(end) - timeToMinutes(start)) * TT_PX_PER_MIN, 36);
+  function blkH(start: string, end?: string): number {
+    const endMin = end ? timeToMinutes(end) : TT_SCHED_END;
+    return Math.max((endMin - timeToMinutes(start)) * TT_PX_PER_MIN, 36);
   }
   function formatHour(h: number): string {
     if (h === 24) return "12a";
@@ -1125,7 +1126,7 @@ function TimetableTab({
                     {/* Artist blocks */}
                     {stageArtists.map((artist) => {
                       const top    = yPos(artist.startTime!);
-                      const height = blkH(artist.startTime!, artist.endTime!);
+                      const height = blkH(artist.startTime!, artist.endTime);
                       const isPicked = myPickSet.has(artist.id);
                       const pickers = pickersForArtist(artist.id);
                       const dimmed = myOnly && !isPicked;
