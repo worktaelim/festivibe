@@ -19,7 +19,7 @@ import {
   type Member,
   type ArtistPick,
 } from "@/lib/db";
-import { ARTISTS, getDayLabels, STAGES, timeToMinutes, type Day, type Artist } from "@/lib/artists";
+import { getArtistsForWeek, getDayLabels, STAGES, timeToMinutes, type Day, type Artist } from "@/lib/artists";
 import { supabase } from "@/lib/supabase";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -381,6 +381,8 @@ function JoinForm({
 
 // ── Lineup Tab ────────────────────────────────────────────────────────────────
 
+type SortMode = "time" | "alpha" | "stage";
+
 function LineupTab({
   memberId,
   members,
@@ -388,6 +390,7 @@ function LineupTab({
   onToggle,
   onArtistTap,
   dayLabels,
+  artists,
 }: {
   memberId: string;
   members: Member[];
@@ -395,9 +398,11 @@ function LineupTab({
   onToggle: (artistId: string) => void;
   onArtistTap: (artist: Artist) => void;
   dayLabels: Record<Day, string>;
+  artists: Artist[];
 }) {
   const [activeDay, setActiveDay] = useState<Day>("fri");
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<SortMode>("time");
 
   const memberMap = Object.fromEntries(members.map((m) => [m.id, m]));
 
@@ -405,10 +410,16 @@ function LineupTab({
     picks.filter((p) => p.member_id === memberId).map((p) => p.artist_id)
   );
 
-  const dayArtists = ARTISTS.filter((a) => a.day === activeDay);
-  const filtered = search.trim()
+  const dayArtists = artists.filter((a) => a.day === activeDay);
+  const searched = search.trim()
     ? dayArtists.filter((a) => a.name.toLowerCase().includes(search.toLowerCase()))
     : dayArtists;
+
+  const filtered = [...searched].sort((a, b) => {
+    if (sort === "alpha") return a.name.localeCompare(b.name);
+    if (sort === "stage") return (a.stage ?? "").localeCompare(b.stage ?? "") || timeToMinutes(a.startTime ?? "13:00") - timeToMinutes(b.startTime ?? "13:00");
+    return timeToMinutes(a.startTime ?? "13:00") - timeToMinutes(b.startTime ?? "13:00");
+  });
 
   function interestedMembers(artistId: string): Member[] {
     return picks
@@ -474,6 +485,36 @@ function LineupTab({
             padding: "10px 14px",
           }}
         />
+      </div>
+
+      {/* Sort controls */}
+      <div style={{ padding: "0 16px 10px", display: "flex", gap: 6 }}>
+        {(["time", "alpha", "stage"] as SortMode[]).map((mode) => {
+          const labels: Record<SortMode, string> = { time: "Time", alpha: "A–Z", stage: "Stage" };
+          const active = sort === mode;
+          return (
+            <button
+              key={mode}
+              onClick={() => setSort(mode)}
+              style={{
+                padding: "5px 12px",
+                borderRadius: 20,
+                border: "2px solid #1c1410",
+                background: active ? dayColor(activeDay) : "#faf7ed",
+                color: active ? "#fff" : "rgba(28,20,16,0.55)",
+                fontSize: 11,
+                fontWeight: 700,
+                cursor: "pointer",
+                fontFamily: "'Space Mono', monospace",
+                letterSpacing: 0.3,
+                boxShadow: active ? "2px 2px 0 #1c1410" : "1px 1px 0 #1c1410",
+                transition: "all 0.15s",
+              }}
+            >
+              {labels[mode]}
+            </button>
+          );
+        })}
       </div>
 
       {/* Artist list */}
@@ -553,12 +594,14 @@ function PicksTab({
   picks,
   onToggle,
   dayLabels,
+  artists,
 }: {
   memberId: string;
   members: Member[];
   picks: ArtistPick[];
   onToggle: (artistId: string) => void;
   dayLabels: Record<Day, string>;
+  artists: Artist[];
 }) {
   const days: Day[] = ["fri", "sat", "sun"];
   const myPickSet = new Set(
@@ -566,7 +609,7 @@ function PicksTab({
   );
   const memberMap = Object.fromEntries(members.map((m) => [m.id, m]));
 
-  const myPicks = ARTISTS.filter((a) => myPickSet.has(a.id));
+  const myPicks = artists.filter((a) => myPickSet.has(a.id));
 
   function interestedOthers(artistId: string): Member[] {
     return picks
@@ -679,11 +722,13 @@ function CrewTab({
   picks,
   currentMemberId,
   dayLabels,
+  artists,
 }: {
   members: Member[];
   picks: ArtistPick[];
   currentMemberId: string;
   dayLabels: Record<Day, string>;
+  artists: Artist[];
 }) {
   const memberMap = Object.fromEntries(members.map((m) => [m.id, m]));
 
@@ -706,11 +751,11 @@ function CrewTab({
   );
 
   function artistName(id: string): string {
-    return ARTISTS.find((a) => a.id === id)?.name ?? id;
+    return artists.find((a) => a.id === id)?.name ?? id;
   }
 
   function artistDay(id: string): Day | undefined {
-    return ARTISTS.find((a) => a.id === id)?.day;
+    return artists.find((a) => a.id === id)?.day;
   }
 
   if (shared.length === 0) {
@@ -869,6 +914,7 @@ function TimetableTab({
   onToggle,
   onArtistTap,
   dayLabels,
+  artists,
 }: {
   memberId: string;
   members: Member[];
@@ -876,6 +922,7 @@ function TimetableTab({
   onToggle: (artistId: string) => void;
   onArtistTap: (artist: Artist) => void;
   dayLabels: Record<Day, string>;
+  artists: Artist[];
 }) {
   const [activeDay, setActiveDay] = useState<Day>("fri");
   const [myOnly, setMyOnly] = useState(false);
@@ -903,7 +950,7 @@ function TimetableTab({
       .filter(Boolean) as Member[];
   }
 
-  const dayArtists = ARTISTS.filter(
+  const dayArtists = artists.filter(
     (a) => a.day === activeDay && a.stage && a.startTime && a.endTime
   );
   const visibleArtists = dayArtists;
@@ -1986,6 +2033,7 @@ export default function GroupApp({ groupId }: { groupId: string }) {
   const currentMember = members.find((m) => m.id === memberId);
   const myPickCount = picks.filter((p) => p.member_id === memberId).length;
   const dayLabels = getDayLabels((group.week ?? 2) as 1 | 2);
+  const weekArtists = getArtistsForWeek((group.week ?? 2) as 1 | 2);
 
   function handleShareInvite() {
     const url = window.location.href;
@@ -2132,6 +2180,7 @@ export default function GroupApp({ groupId }: { groupId: string }) {
             onToggle={handleToggle}
             onArtistTap={setSelectedArtist}
             dayLabels={dayLabels}
+            artists={weekArtists}
           />
         )}
         {activeTab === "schedule" && (
@@ -2142,6 +2191,7 @@ export default function GroupApp({ groupId }: { groupId: string }) {
             onToggle={handleToggle}
             onArtistTap={setSelectedArtist}
             dayLabels={dayLabels}
+            artists={weekArtists}
           />
         )}
         {activeTab === "picks" && (
@@ -2151,6 +2201,7 @@ export default function GroupApp({ groupId }: { groupId: string }) {
             picks={picks}
             onToggle={handleToggle}
             dayLabels={dayLabels}
+            artists={weekArtists}
           />
         )}
         {activeTab === "crew" && (
@@ -2159,6 +2210,7 @@ export default function GroupApp({ groupId }: { groupId: string }) {
             picks={picks}
             currentMemberId={memberId}
             dayLabels={dayLabels}
+            artists={weekArtists}
           />
         )}
       </div>
