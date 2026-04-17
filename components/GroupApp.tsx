@@ -210,7 +210,7 @@ function JoinForm({
   return (
     <div
       style={{
-        minHeight: "100dvh",
+        minHeight: "100vh",
         background: "#f0ebe0",
         display: "flex",
         flexDirection: "column",
@@ -931,7 +931,7 @@ function TimetableTab({
 
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el) return;
+    if (!el || typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(([entry]) => setContainerW(entry.contentRect.width));
     ro.observe(el);
     return () => ro.disconnect();
@@ -1394,7 +1394,7 @@ function GroupInfoSheet({ group, members, currentMemberId, isHost, onKick, onClo
   return (
     <>
       <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(28,20,16,0.55)", zIndex: 300 }} />
-      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#faf7ed", borderRadius: "16px 16px 0 0", border: "2px solid #1c1410", borderBottom: "none", zIndex: 301, boxShadow: "0 -4px 0 #1c1410", overflowY: "auto", maxHeight: "85dvh" }}>
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#faf7ed", borderRadius: "16px 16px 0 0", border: "2px solid #1c1410", borderBottom: "none", zIndex: 301, boxShadow: "0 -4px 0 #1c1410", overflowY: "auto", maxHeight: "85vh" }}>
         <div style={{ width: 36, height: 4, background: "rgba(28,20,16,0.2)", borderRadius: 2, margin: "8px auto 0" }} />
 
         {/* Cover */}
@@ -1751,7 +1751,7 @@ function EditProfileSheet({
         padding: "8px 20px max(32px, env(safe-area-inset-bottom))",
         zIndex: 301,
         boxShadow: "0 -4px 0 #1c1410",
-        overflowY: "auto", maxHeight: "90dvh",
+        overflowY: "auto", maxHeight: "90vh",
       }}>
         <div style={{ width: 36, height: 4, background: "rgba(28,20,16,0.2)", borderRadius: 2, margin: "8px auto 20px" }} />
 
@@ -2005,7 +2005,7 @@ export default function GroupApp({ groupId }: { groupId: string }) {
 
   if (loading) {
     return (
-      <div style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f0ebe0" }}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f0ebe0" }}>
         <div style={{ color: "rgba(28,20,16,0.5)", fontSize: 14, fontFamily: "'Space Mono', monospace" }}>Loading...</div>
       </div>
     );
@@ -2013,7 +2013,7 @@ export default function GroupApp({ groupId }: { groupId: string }) {
 
   if (notFound) {
     return (
-      <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#f0ebe0", gap: 12, padding: 24 }}>
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#f0ebe0", gap: 12, padding: 24 }}>
         <CactusIcon size={56} />
         <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "'Space Mono', monospace", color: "#1c1410" }}>Group not found</div>
         <div style={{ fontSize: 14, color: "rgba(28,20,16,0.5)", textAlign: "center", fontFamily: "'Space Mono', monospace" }}>
@@ -2112,7 +2112,7 @@ export default function GroupApp({ groupId }: { groupId: string }) {
 
   return (
     <div
-      style={{ height: "100dvh", display: "flex", flexDirection: "column", background: "#f0ebe0", overflow: "hidden" }}
+      style={{ height: "100vh", display: "flex", flexDirection: "column", background: "#f0ebe0", overflow: "hidden" }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >

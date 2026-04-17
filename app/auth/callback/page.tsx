@@ -26,7 +26,7 @@ function CallbackInner() {
 
   return (
     <div style={{
-      minHeight: "100dvh",
+      minHeight: "100vh",
       background: "#f0ebe0",
       display: "flex",
       alignItems: "center",
@@ -42,7 +42,7 @@ function CallbackInner() {
 export default function AuthCallback() {
   return (
     <Suspense fallback={
-      <div style={{ minHeight: "100dvh", background: "#f0ebe0", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ minHeight: "100vh", background: "#f0ebe0", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ fontFamily: "'Space Mono', monospace", color: "#1c1410", fontSize: 14 }}>Signing in...</div>
       </div>
     }>

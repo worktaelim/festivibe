@@ -132,7 +132,7 @@ function LoginScreen() {
 
   return (
     <div style={{
-      minHeight: "100dvh",
+      minHeight: "100vh",
       background: "#f0ebe0",
       display: "flex",
       flexDirection: "column",
@@ -331,7 +331,7 @@ function OnboardingScreen({ session, onDone }: { session: Session; onDone: () =>
   const initials = name.trim().split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase() || "?";
 
   return (
-    <div style={{ minHeight: "100dvh", background: "#f0ebe0", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px" }}>
+    <div style={{ minHeight: "100vh", background: "#f0ebe0", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px" }}>
       <div style={{ background: "#faf7ed", border: "2px solid #1c1410", borderRadius: 10, padding: "28px 24px", width: "100%", maxWidth: 380, boxShadow: "3px 3px 0 #1c1410" }}>
         <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 6, fontFamily: "'Space Mono', monospace", color: "#1c1410" }}>
           Set up your profile
@@ -417,7 +417,7 @@ export default function AuthGate({ children }: { children: ReactNode }) {
   }, []);
 
   if (session === undefined) {
-    return <div style={{ minHeight: "100dvh", background: "#f0ebe0" }} />;
+    return <div style={{ minHeight: "100vh", background: "#f0ebe0" }} />;
   }
 
   if (!session) {

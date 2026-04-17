@@ -118,7 +118,7 @@ export default function Home() {
   return (
     <AuthGate>
     <div style={{
-      minHeight: "100dvh",
+      minHeight: "100vh",
       background: "#f0ebe0",
       display: "flex",
       flexDirection: "column",
